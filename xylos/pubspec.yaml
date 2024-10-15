@@ -1,0 +1,48 @@
+name: xylos
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audioplayers: ^0.20.1
+  path_provider: ^2.0.11 
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/sounds/note1.wav
+    - assets/sounds/note2.wav
+    - assets/sounds/note3.wav
+    - assets/sounds/note4.wav
+    - assets/sounds/note5.wav
+    - assets/sounds/note6.wav
+    - assets/sounds/note7.wav
+    - assets/sounds/party.wav
+    - assets/sounds/happy.wav
+    - assets/sounds/joy.wav
+    - assets/sounds/funny.wav
+    - assets/sounds/birthday.wav
+    - assets/images/logo.png
+    - assets/images/kid.png
+    - assets/images/wall1.png
+    - assets/images/wall2.png
+    - assets/images/wall3.png
+    - assets/images/wall4.png
+    - assets/images/wall5.png
+
+  fonts:
+    - family: ComicSans
+      fonts:
+        - asset: assets/fonts/ComicSansMS3.ttf
