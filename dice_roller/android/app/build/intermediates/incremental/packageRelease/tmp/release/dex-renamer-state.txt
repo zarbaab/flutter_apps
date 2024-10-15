@@ -1,0 +1,4 @@
+#Sun Sep 29 00:56:57 PKT 2024
+base.0=D\:\\7th semester\\mobile-applicatio-development\\dice_roller\\android\\app\\build\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

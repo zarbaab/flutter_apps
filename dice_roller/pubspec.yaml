@@ -1,0 +1,34 @@
+name: dice_roller
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^2.19.6
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  collection: 1.18.0  # Downgraded to resolve conflict with flutter_test
+  material_color_utilities: 0.11.1  # Match the version required by flutter_test
+  meta: 1.15.0  # Match the version required by flutter_test
+  leak_tracker: 10.0.5  # Keep only this version to avoid conflict
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  stack_trace: 1.11.1  # Match the version required by flutter_test
+  string_scanner: 1.2.0  # Match the version required by flutter_test
+  test_api: 0.7.2  # Match the version required by flutter_test
+  vm_service: 14.2.5  # Match the version required by flutter_test
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - images/
+    - images/ludo.png
+    - images/ludo-header-thumbnail.png
