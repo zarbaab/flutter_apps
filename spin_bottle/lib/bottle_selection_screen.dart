@@ -7,10 +7,10 @@ class BottleSelectionScreen extends StatefulWidget {
   const BottleSelectionScreen({super.key, required this.onBottleSelected});
 
   @override
-  _BottleSelectionScreenState createState() => _BottleSelectionScreenState();
+  BottleSelectionScreenState createState() => BottleSelectionScreenState();
 }
 
-class _BottleSelectionScreenState extends State<BottleSelectionScreen> {
+class BottleSelectionScreenState extends State<BottleSelectionScreen> {
   String? _selectedBottle;
 
   void _selectBottle(String bottle) {
@@ -27,7 +27,6 @@ class _BottleSelectionScreenState extends State<BottleSelectionScreen> {
       'assets/images/bottle_2.png',
       'assets/images/bottle_3.png',
     ];
-
     return Scaffold(
       backgroundColor:
           const Color.fromARGB(255, 25, 48, 82), // Set background color

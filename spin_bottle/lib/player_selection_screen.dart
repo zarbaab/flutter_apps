@@ -2,21 +2,44 @@ import 'package:flutter/material.dart';
 import 'spin_bottle_home_page.dart';
 
 class PlayerSelectionScreen extends StatefulWidget {
-  final String selectedBottle; // Add this parameter to pass the selected bottle
+  final String selectedBottle;
 
   const PlayerSelectionScreen({super.key, required this.selectedBottle});
 
   @override
-  _PlayerSelectionScreenState createState() => _PlayerSelectionScreenState();
+  PlayerSelectionScreenState createState() => PlayerSelectionScreenState();
 }
 
-class _PlayerSelectionScreenState extends State<PlayerSelectionScreen> {
-  int? _selectedPlayers;
+class PlayerSelectionScreenState extends State<PlayerSelectionScreen> {
+  final List<String> _players = [];
+  final TextEditingController _nameController = TextEditingController();
 
-  void _selectPlayers(int players) {
-    setState(() {
-      _selectedPlayers = players;
-    });
+  void _addPlayer() {
+    if (_nameController.text.isNotEmpty && _players.length < 10) {
+      setState(() {
+        _players.add(_nameController.text);
+        _nameController.clear();
+      });
+    }
+  }
+
+  void _addDefaultPlayers() {
+    if (_players.isEmpty) {
+      setState(() {
+        _players.addAll([
+          'Player 1',
+          'Player 2',
+          'Player 3',
+          'Player 4',
+          'Player 5',
+          'Player 6',
+          'Player 7',
+          'Player 8',
+          'Player 9',
+          'Player 10'
+        ]);
+      });
+    }
   }
 
   @override
@@ -33,40 +56,40 @@ class _PlayerSelectionScreenState extends State<PlayerSelectionScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Select Number of Players',
-              style: TextStyle(fontSize: 24, color: Colors.white),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Enter player name',
+              ),
             ),
-            const SizedBox(height: 20),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 10,
-              children: List.generate(12, (index) {
-                return ChoiceChip(
-                  label: Text(
-                    '${index + 1}',
-                    style: const TextStyle(
-                        color:
-                            Color.fromARGB(255, 25, 48, 82)), // Set text color
-                  ),
-                  selected: _selectedPlayers == index + 1,
-                  onSelected: (selected) {
-                    _selectPlayers(index + 1);
-                  },
-                );
-              }),
-            ),
-            const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _selectedPlayers != null
+              onPressed: _addPlayer,
+              child: const Text('Add Player'),
+            ),
+            ElevatedButton(
+              onPressed: _addDefaultPlayers,
+              child: const Text('Add Default Players'),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _players.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_players[index]),
+                  );
+                },
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _players.length == 10
                   ? () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => SpinBottleHomePage(
-                            numberOfPlayers: _selectedPlayers!,
-                            selectedBottle: widget
-                                .selectedBottle, // Pass the selected bottle
+                            players: _players,
+                            selectedBottle: widget.selectedBottle,
                           ),
                         ),
                       );

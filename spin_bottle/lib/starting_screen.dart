@@ -33,7 +33,8 @@ class StartingScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const LoadingScreen()),
+                    builder: (context) => const LoadingScreen(),
+                  ),
                 );
               },
             ),

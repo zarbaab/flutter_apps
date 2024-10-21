@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-// Import for rootBundle
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -93,7 +93,6 @@ class XylophonePageState extends State<XylophonePage> {
     Colors.indigo,
     Colors.purple,
   ];
-
   final List<String> _keyNames = [
     'Do',
     'Re',
@@ -103,7 +102,6 @@ class XylophonePageState extends State<XylophonePage> {
     'La',
     'Ti',
   ];
-
   final List<int> _soundNumbers = [1, 2, 3, 4, 5, 6, 7];
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -118,19 +116,54 @@ class XylophonePageState extends State<XylophonePage> {
     debugPrint('Playing sound from file: $filePath');
   }
 
-  Widget _buildKey(
-      {required Color color,
-      required int soundNumber,
-      required String keyName}) {
+  void _showColorPicker(int index) {
+    Color pickerColor = _keyColors[index];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Pick a Color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: pickerColor,
+              onColorChanged: (color) {
+                setState(() {
+                  _keyColors[index] = color;
+                });
+              },
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              child: const Text('Done'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildKey({
+    required Color color,
+    required int soundNumber,
+    required String keyName,
+    required int index,
+  }) {
     return Expanded(
       child: GestureDetector(
         onTap: () {
           debugPrint('$keyName pressed');
           _playSound(soundNumber);
         },
+        onLongPress: () {
+          _showColorPicker(index);
+        },
         child: Container(
-          margin: const EdgeInsets.symmetric(
-              horizontal: 75.0), // Adjusted margin to decrease size
+          margin: const EdgeInsets.symmetric(horizontal: 75.0),
           color: color,
           child: Center(
             child: Text(
@@ -176,9 +209,11 @@ class XylophonePageState extends State<XylophonePage> {
               int idx = entry.key;
               Color color = entry.value;
               return _buildKey(
-                  color: color,
-                  soundNumber: _soundNumbers[idx],
-                  keyName: _keyNames[idx]);
+                color: color,
+                soundNumber: _soundNumbers[idx],
+                keyName: _keyNames[idx],
+                index: idx,
+              );
             }),
           ],
         ),

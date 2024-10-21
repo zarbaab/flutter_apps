@@ -25,8 +25,10 @@ class LoadingScreenState extends State<LoadingScreen>
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) =>
-                BottleSelectionScreen(onBottleSelected: (bottle) {})),
+          builder: (context) => BottleSelectionScreen(
+            onBottleSelected: (bottle) {},
+          ),
+        ),
       );
     });
   }
