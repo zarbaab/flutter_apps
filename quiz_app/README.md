@@ -67,6 +67,11 @@ Contributions are welcome! To contribute:
 
 Thanks to all contributors and users for their support in making this quiz game even better!
 
+
+
+https://github.com/user-attachments/assets/c461eb6f-0d5a-48ad-b347-de1572544673
+
+
 ![Screenshot_20241021-125243](https://github.com/user-attachments/assets/d5a8559c-e264-4f27-a49a-37aa0d780c1a)
 ![Screenshot_20241021-125246](https://github.com/user-attachments/assets/35c842f0-07a1-4214-93de-b6d6f3f12a95)
 ![Screenshot_20241021-125251](https://github.com/user-attachments/assets/24cc11c9-7ec2-4e29-aff3-646ea7b2b913)
