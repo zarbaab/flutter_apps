@@ -4,29 +4,57 @@ class QuizBrain {
   int _questionIndex = 0;
 
   final List<Quiz> _questionBank = [
-    Quiz(questionText: 'Flutter is a framework?', answer: true),
-    Quiz(questionText: 'Flutter uses Dart language?', answer: true),
-    Quiz(questionText: 'Widgets in Flutter are immutable?', answer: true),
-    Quiz(questionText: 'Flutter is developed by Apple?', answer: false),
-    Quiz(questionText: 'Hot Reload is a feature in Flutter?', answer: true),
-    Quiz(questionText: 'Dart is a statically-typed language?', answer: true),
     Quiz(
-        questionText: 'Flutter can be used for web development?', answer: true),
-    Quiz(questionText: 'Stateful widgets cannot change state?', answer: false),
+      questionText: 'Flutter is developed by which company?',
+      answer: 'Google',
+      options: ['Apple', 'Google', 'Microsoft'],
+    ),
     Quiz(
-        questionText: 'The build method is called only once in widgets?',
-        answer: false),
+      questionText: 'Which language does Flutter use?',
+      answer: 'Dart',
+      options: ['Kotlin', 'Swift', 'Dart'],
+    ),
     Quiz(
-        questionText: 'The default Flutter app starts with a counter example?',
-        answer: true),
+      questionText: 'Which of the following is true about Flutter?',
+      answer: 'Widgets are immutable',
+      options: ['Widgets are mutable', 'Widgets are immutable', 'No widgets'],
+    ),
+     Quiz(
+    questionText: 'Which of the following is a widget used for layout in Flutter?',
+    answer: 'Column',
+    options: ['Column', 'Row', 'Stack'],
+  ),
+  Quiz(
+    questionText: 'Which of the following statements is true about Stateless widgets?',
+    answer: 'They cannot change their state during their lifetime.',
+    options: [
+      'They can change their state at any time.',
+      'They cannot change their state during their lifetime.',
+      'They are mutable.'
+    ],
+  ),
+  Quiz(
+    questionText: 'Which of the following is a correct way to create a Stateful widget?',
+    answer: 'Extend the StatefulWidget class and override createState().',
+    options: [
+      'Extend the StatelessWidget class and override build().',
+      'Implement the Widget interface.',
+      'Extend the StatefulWidget class and override createState().',
+    ],
+  ),
+   
   ];
 
   String getQuestion() {
     return _questionBank[_questionIndex].questionText;
   }
 
-  bool getAnswer() {
+  dynamic getAnswer() {
     return _questionBank[_questionIndex].answer;
+  }
+
+  List<String>? getOptions() {
+    return _questionBank[_questionIndex].options;
   }
 
   void nextQuestion() {

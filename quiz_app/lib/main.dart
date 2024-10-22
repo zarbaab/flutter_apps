@@ -6,6 +6,7 @@ QuizBrain quizBrain = QuizBrain();
 void main() => runApp(QuizApp());
 
 class QuizApp extends StatelessWidget {
+  const QuizApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,7 +40,7 @@ class FrontPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => QuizPage()));
+                    MaterialPageRoute(builder: (context) => QuizTypePage()));
               },
               child: Text(
                 'Next',
@@ -57,7 +58,67 @@ class FrontPage extends StatelessWidget {
   }
 }
 
+class QuizTypePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.purple.shade100,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Choose Quiz Type',
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 20.0),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => QuizPage(isMCQ: false)));
+              },
+              child: Text(
+                'True/False Quiz',
+                style: TextStyle(fontSize: 18.0),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 15.0),
+                backgroundColor: Colors.green,
+              ),
+            ),
+            SizedBox(height: 20.0),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => QuizPage(isMCQ: true)));
+              },
+              child: Text(
+                'Multiple Choice Quiz',
+                style: TextStyle(fontSize: 18.0),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 15.0),
+                backgroundColor: Colors.blue,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class QuizPage extends StatefulWidget {
+  final bool isMCQ;
+  QuizPage({required this.isMCQ});
+
   @override
   _QuizPageState createState() => _QuizPageState();
 }
@@ -68,8 +129,8 @@ class _QuizPageState extends State<QuizPage> {
   bool isQuizStarted = false;
   int timer = 10;
 
-  void checkAnswer(bool userPickedAnswer) {
-    bool correctAnswer = quizBrain.getAnswer();
+  void checkAnswer(dynamic userPickedAnswer) {
+    var correctAnswer = quizBrain.getAnswer();
     setState(() {
       if (correctAnswer == userPickedAnswer) {
         scoreKeeper.add(Icon(Icons.check, color: Colors.green));
@@ -101,7 +162,7 @@ class _QuizPageState extends State<QuizPage> {
           timer--;
           startTimer();
         } else {
-          checkAnswer(false); // Timeout, move to next question
+          checkAnswer(null); // Timeout, move to next question
         }
       });
     });
@@ -162,33 +223,49 @@ class _QuizPageState extends State<QuizPage> {
                           ),
                         ),
                         SizedBox(height: 20.0),
-                        Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: ElevatedButton(
-                                child: Text('True'),
-                                onPressed: () {
-                                  checkAnswer(true);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                ),
+                        widget.isMCQ
+                            ? Column(
+                                children: quizBrain.getOptions() != null
+                                    ? quizBrain.getOptions()!.map((option) {
+                                        return ElevatedButton(
+                                          child: Text(option),
+                                          onPressed: () {
+                                            checkAnswer(option);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blueAccent,
+                                          ),
+                                        );
+                                      }).toList()
+                                    : [],
+                              )
+                            : Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      child: Text('True'),
+                                      onPressed: () {
+                                        checkAnswer(true);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      child: Text('False'),
+                                      onPressed: () {
+                                        checkAnswer(false);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: ElevatedButton(
-                                child: Text('False'),
-                                onPressed: () {
-                                  checkAnswer(false);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
