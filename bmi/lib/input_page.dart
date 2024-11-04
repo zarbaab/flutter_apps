@@ -14,26 +14,54 @@ class InputPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: RepeatContainerCode(
-                      colors: Color.fromARGB(255, 181, 182, 207)),
+                    color: Color(0xFF1D1E33),
+                    child: RepeatTextAndIconWidget(
+                      iconData: Icons.male,
+                      label: 'MALE',
+                    ),
+                  ),
                 ),
                 Expanded(
-                  child: RepeatContainerCode(colors: Color(0xFF1D1E33)),
+                  child: RepeatContainerCode(
+                    color: Color(0xFF1D1E33),
+                    child: RepeatTextAndIconWidget(
+                      iconData: Icons.female,
+                      label: 'FEMALE',
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: RepeatContainerCode(colors: Color(0xFF1D1E33)),
+            child: RepeatContainerCode(
+              color: Color(0xFF1D1E33),
+              child: RepeatTextAndIconWidget(
+                iconData: Icons.height,
+                label: 'HEIGHT',
+              ),
+            ),
           ),
           Expanded(
             child: Row(
               children: [
                 Expanded(
-                  child: RepeatContainerCode(colors: Color(0xFF1D1E33)),
+                  child: RepeatContainerCode(
+                    color: Color(0xFF1D1E33),
+                    child: RepeatTextAndIconWidget(
+                      iconData: Icons.fitness_center,
+                      label: 'WEIGHT',
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: RepeatContainerCode(
-                      colors: Color.fromARGB(255, 68, 69, 75)),
+                    color: Color(0xFF1D1E33),
+                    child: RepeatTextAndIconWidget(
+                      iconData: Icons.accessibility,
+                      label: 'AGE',
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -45,13 +73,54 @@ class InputPage extends StatelessWidget {
 }
 
 class RepeatContainerCode extends StatelessWidget {
-  RepeatContainerCode({Key? key, required this.colors}) : super(key: key);
-  final Color colors;
+  final Color color;
+  final Widget child;
+
+  const RepeatContainerCode({
+    Key? key,
+    required this.color,
+    required this.child,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.all(8.0),
-      color: colors,
+      color: color,
+      child: Center(child: child),
+    );
+  }
+}
+
+class RepeatTextAndIconWidget extends StatelessWidget {
+  final IconData iconData;
+  final String label;
+
+  const RepeatTextAndIconWidget({
+    Key? key,
+    required this.iconData,
+    required this.label,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          iconData,
+          size: 80.0,
+          color: Colors.white,
+        ),
+        SizedBox(height: 15.0),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 18.0,
+            color: Colors.white,
+          ),
+        ),
+      ],
     );
   }
 }
