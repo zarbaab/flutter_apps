@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'add_task_screen.dart';
 import 'package:flutter_task_management_app/task_model.dart';
 import 'package:flutter_task_management_app/db_helper.dart';
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -39,29 +38,31 @@ class _HomeScreenState extends State<HomeScreen> {
       body: tasks.isEmpty
           ? const Center(child: Text('No Tasks'))
           : ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                final task = tasks[index];
-                return ListTile(
-                  title: Text(task.title),
-                  subtitle: Text(task.note),
-                  trailing: Checkbox(
-                    value: task.isCompleted,
-                    onChanged: (bool? value) {
-                      _toggleCompletion(task);
-                    },
-                  ),
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => AddTaskScreen(task: task),
-                      ),
-                    );
-                    _refreshTasks();
-                  },
-                );
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          final task = tasks[index];
+          return ListTile(
+            title: Text(task.title),
+            subtitle: Text(task.note),
+            trailing: IconButton(
+              icon: Icon(task.isCompleted
+                  ? Icons.check_box
+                  : Icons.check_box_outline_blank),
+              onPressed: () {
+                _toggleCompletion(task);
               },
             ),
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AddTaskScreen(task: task),
+                ),
+              );
+              _refreshTasks();
+            },
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.of(context)
