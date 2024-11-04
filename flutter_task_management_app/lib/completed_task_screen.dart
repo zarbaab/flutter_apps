@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'db_helper.dart';
 import 'task_model.dart';
 
-class TodayTaskScreen extends StatelessWidget {
-  const TodayTaskScreen({Key? key}) : super(key: key);
+class CompletedTaskScreen extends StatelessWidget {
+  const CompletedTaskScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Task>>(
-      future: DatabaseHelper.instance.readTodayTasks(),
+      future: DatabaseHelper.instance.readCompletedTasks(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.data!.isEmpty) {
-          return const Center(child: Text('No tasks for today.'));
+          return const Center(child: Text('No completed tasks.'));
         }
         return ListView(
           children: snapshot.data!

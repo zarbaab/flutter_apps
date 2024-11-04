@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_task_management_app/db_helper.dart';
-import 'package:flutter_task_management_app/task_model.dart';
+import 'db_helper.dart';
+import 'task_model.dart';
 
 class AddTaskScreen extends StatefulWidget {
   final Task? task;
-
-  const AddTaskScreen({super.key, this.task});
+  const AddTaskScreen({Key? key, this.task}) : super(key: key);
 
   @override
   _AddTaskScreenState createState() => _AddTaskScreenState();
@@ -13,11 +12,11 @@ class AddTaskScreen extends StatefulWidget {
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  late String title;
-  late String note;
-  late bool isCompleted;
-  late String time;
-  late String date;
+  String title = '';
+  String note = '';
+  bool isCompleted = false;
+  String time = '';
+  String date = '';
 
   bool get _isFormFilled =>
       title.isNotEmpty && note.isNotEmpty && time.isNotEmpty && date.isNotEmpty;
@@ -42,20 +41,21 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          onChanged: () => setState(() {}),
           child: Column(
             children: [
               TextFormField(
                 initialValue: title,
                 decoration: const InputDecoration(labelText: 'Title'),
                 onChanged: (value) => setState(() => title = value),
-                onSaved: (value) => title = value!,
+                validator: (value) =>
+                    value!.isEmpty ? 'Title cannot be empty' : null,
               ),
               TextFormField(
                 initialValue: note,
                 decoration: const InputDecoration(labelText: 'Note'),
                 onChanged: (value) => setState(() => note = value),
-                onSaved: (value) => note = value!,
+                validator: (value) =>
+                    value!.isEmpty ? 'Note cannot be empty' : null,
               ),
               Row(
                 children: [
@@ -77,6 +77,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _isFormFilled ? _saveTask : null,
                 child: Text(widget.task == null ? 'Add Task' : 'Update Task'),
@@ -99,14 +100,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         time: time,
         date: date,
       );
+
       if (widget.task == null) {
         await DatabaseHelper.instance.createTask(task);
       } else {
         await DatabaseHelper.instance.updateTask(task);
       }
+
       if (mounted) {
-        // Check if the widget is still mounted
-        Navigator.of(context).pop(); // Safely use BuildContext
+        Navigator.of(context).pop();
       }
     }
   }

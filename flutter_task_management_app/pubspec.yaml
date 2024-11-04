@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  sqflite: ^2.0.3
+  sqflite: ^2.0.0+4
   path_provider: ^2.0.11
   intl: ^0.17.0
   flutter_datetime_picker: ^1.5.1
@@ -21,11 +21,12 @@ dependencies:
   animate_do: ^3.3.4
   panara_dialogs: ^0.1.2
   ftoast: ^2.0.0
+  path: ^1.8.0
+  sqflite_common_ffi: ^2.0.0+1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^2.0.0
 
 flutter:
@@ -34,11 +35,3 @@ flutter:
   assets:
     - assets/img/
     - assets/lottie/
-
-  # Uncomment the following lines if you want to use custom fonts in your app
-  # fonts:
-  #   - family: CustomFont
-  #     fonts:
-  #       - asset: fonts/CustomFont-Regular.ttf
-  #       - asset: fonts/CustomFont-Bold.ttf
-  #         weight: 700

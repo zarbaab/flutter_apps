@@ -1,6 +1,9 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // for non-mobile platform support
 import 'package:path/path.dart';
 import 'task_model.dart';
+import 'package:intl/intl.dart';
+import 'dart:io' show Platform;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -15,6 +18,12 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
+    // Initialize for non-mobile platforms
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
@@ -31,15 +40,15 @@ class DatabaseHelper {
     const boolType = 'BOOLEAN NOT NULL';
 
     await db.execute('''
-CREATE TABLE tasks ( 
-  id $idType, 
-  title $textType,
-  note $textType,
-  isCompleted $boolType,
-  time $textType,
-  date $textType
-  )
-''');
+    CREATE TABLE tasks ( 
+      id $idType, 
+      title $textType,
+      note $textType,
+      isCompleted $boolType,
+      time $textType,
+      date $textType
+    )
+    ''');
   }
 
   Future<int> createTask(Task task) async {
@@ -70,5 +79,26 @@ CREATE TABLE tasks (
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<List<Task>> readTodayTasks() async {
+    final db = await instance.database;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final result =
+        await db.query('tasks', where: 'date = ?', whereArgs: [today]);
+    return result.map((json) => Task.fromJson(json)).toList();
+  }
+
+  Future<List<Task>> readCompletedTasks() async {
+    final db = await instance.database;
+    final result =
+        await db.query('tasks', where: 'isCompleted = ?', whereArgs: [1]);
+    return result.map((json) => Task.fromJson(json)).toList();
+  }
+
+  Future<List<Task>> readRepeatedTasks() async {
+    final db = await instance.database;
+    final result = await db.query('tasks', where: 'repeat = ?', whereArgs: [1]);
+    return result.map((json) => Task.fromJson(json)).toList();
   }
 }
