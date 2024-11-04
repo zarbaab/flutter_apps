@@ -13,46 +13,45 @@ class InputPage extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(8.0),
-                    color: Colors.grey[800],
-                  ),
+                  child: RepeatContainerCode(
+                      colors: Color.fromARGB(255, 181, 182, 207)),
                 ),
                 Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(8.0),
-                    color: Colors.grey[800],
-                  ),
+                  child: RepeatContainerCode(colors: Color(0xFF1D1E33)),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: Container(
-              margin: EdgeInsets.all(8.0),
-              color: Colors.grey[800],
-            ),
+            child: RepeatContainerCode(colors: Color(0xFF1D1E33)),
           ),
           Expanded(
             child: Row(
               children: [
                 Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(8.0),
-                    color: Colors.grey[800],
-                  ),
+                  child: RepeatContainerCode(colors: Color(0xFF1D1E33)),
                 ),
                 Expanded(
-                  child: Container(
-                    margin: EdgeInsets.all(8.0),
-                    color: Colors.grey[800],
-                  ),
+                  child: RepeatContainerCode(
+                      colors: Color.fromARGB(255, 68, 69, 75)),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class RepeatContainerCode extends StatelessWidget {
+  RepeatContainerCode({Key? key, required this.colors}) : super(key: key);
+  final Color colors;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.all(8.0),
+      color: colors,
     );
   }
 }
