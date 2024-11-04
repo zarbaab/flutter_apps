@@ -1,19 +1,37 @@
-# bmi
+# BMI Calculator
 
-A new Flutter project.
+This Flutter application serves as a **prototype interface** for a BMI (Body Mass Index) calculator. Currently, it displays an organized layout with gender selection, height and weight inputs, and reusable widgets, but it does not perform the full BMI calculation functionality yet.
+
+## Features
+
+- **Gender Selection**: Choose between Male and Female options.
+- **Interface Design**: Basic layout with height and weight input sections.
+- **Reusable Widgets**: Uses `RepeatTextAndIconWidget` for cleaner and more modular code.
+
+> **Note**: This app is primarily a UI prototype. While it provides an interface for BMI calculation, full functionality has not been implemented.
+
+## Code Structure
+
+The app structure is organized using a reusable widget named `RepeatTextAndIconWidget`. This widget accepts a label and an icon as parameters, helping reduce code redundancy and keeping the layout modular and clean.
+
+
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+To get a local copy of the project up and running, follow these simple steps.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Flutter SDK**: Ensure you have Flutter installed. If not, follow the [Flutter installation guide](https://docs.flutter.dev/get-started/install).
+- **IDE**: Use a compatible IDE like [Android Studio](https://developer.android.com/studio) or [Visual Studio Code](https://code.visualstudio.com/) with Flutter plugins.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/bmi-calculator.git
+## Screenshots
+
 
 
 ## video 3 progress screenshot
@@ -22,3 +40,6 @@ samples, guidance on mobile development, and a full API reference.
 ## video 4 progress screenshot
 
 ![Capture2](https://github.com/user-attachments/assets/6f26e271-6fc4-4938-9540-436e854441b8)
+
+## video 5 progress screenshot
+![2](https://github.com/user-attachments/assets/0dadcc6f-50aa-4288-8156-e710a969a6cb)
