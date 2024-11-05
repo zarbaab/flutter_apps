@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'IconTextFile.dart';
+import 'container.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class InputPage extends StatelessWidget {
   @override
@@ -68,59 +71,6 @@ class InputPage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class RepeatContainerCode extends StatelessWidget {
-  final Color color;
-  final Widget child;
-
-  const RepeatContainerCode({
-    Key? key,
-    required this.color,
-    required this.child,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(8.0),
-      color: color,
-      child: Center(child: child),
-    );
-  }
-}
-
-class RepeatTextAndIconWidget extends StatelessWidget {
-  final IconData iconData;
-  final String label;
-
-  const RepeatTextAndIconWidget({
-    Key? key,
-    required this.iconData,
-    required this.label,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          iconData,
-          size: 80.0,
-          color: Colors.white,
-        ),
-        SizedBox(height: 15.0),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 18.0,
-            color: Colors.white,
-          ),
-        ),
-      ],
     );
   }
 }
