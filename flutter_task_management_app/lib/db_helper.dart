@@ -17,7 +17,6 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    // Initialize for non-mobile platforms
     if (!Platform.isAndroid && !Platform.isIOS) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
@@ -28,8 +27,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Increment the database version
       onCreate: _createDB,
+      onUpgrade: _upgradeDB, // Add onUpgrade callback
     );
   }
 
@@ -46,9 +46,15 @@ class DatabaseHelper {
       isCompleted $boolType,
       time $textType,
       date $textType,
-      repeatDays TEXT // New column for storing repeating days
+      repeatDays TEXT
     )
     ''');
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute("ALTER TABLE tasks ADD COLUMN repeatDays TEXT");
+    }
   }
 
   Future<int> createTask(Task task) async {

@@ -113,8 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _refreshTasks();
             }
           },
-          onLongPress: () =>
-              _showTaskOptions(context, task), // Long press action
+          onLongPress: () => _showTaskOptions(context, task),
         );
       },
     );

@@ -5,7 +5,7 @@ class Task {
   final bool isCompleted;
   final String time;
   final String date;
-  final List<String> repeatDays; // Field to store selected days
+  final List<String> repeatDays;
 
   Task({
     this.id,
@@ -14,7 +14,7 @@ class Task {
     required this.isCompleted,
     required this.time,
     required this.date,
-    this.repeatDays = const [], // Default to empty list if not provided
+    this.repeatDays = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -24,16 +24,16 @@ class Task {
         'isCompleted': isCompleted ? 1 : 0,
         'time': time,
         'date': date,
-        'repeatDays': repeatDays.isNotEmpty ? repeatDays.join(',') : null,
+        'repeatDays': repeatDays.join(','),
       };
 
   static Task fromJson(Map<String, dynamic> json) => Task(
         id: json['id'] as int?,
-        title: json['title'] as String? ?? '', // Provide default values
-        note: json['note'] as String? ?? '',
-        isCompleted: (json['isCompleted'] as int? ?? 0) == 1,
-        time: json['time'] as String? ?? '',
-        date: json['date'] as String? ?? '',
+        title: json['title'] as String,
+        note: json['note'] as String,
+        isCompleted: (json['isCompleted'] as int) == 1,
+        time: json['time'] as String,
+        date: json['date'] as String,
         repeatDays: (json['repeatDays'] as String?)?.split(',') ?? [],
       );
 }

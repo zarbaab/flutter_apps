@@ -7,28 +7,31 @@ class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({Key? key, this.task}) : super(key: key);
 
   @override
-  _AddTaskScreenState createState() => _AddTaskScreenState();
+  AddTaskScreenState createState() => AddTaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+class AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
   String title = '';
   String note = '';
   bool isCompleted = false;
   String time = '';
   String date = '';
-  List<bool> _selectedDays = List.generate(7, (_) => false);
+  List<bool> _selectedDays =
+      List.generate(7, (_) => false); // Track selected days
 
   @override
   void initState() {
     super.initState();
-    title = widget.task?.title ?? '';
-    note = widget.task?.note ?? '';
-    isCompleted = widget.task?.isCompleted ?? false;
-    time = widget.task?.time ?? '';
-    date = widget.task?.date ?? '';
-    if (widget.task != null && widget.task!.repeatDays.isNotEmpty) {
-      _initializeSelectedDays(widget.task!.repeatDays);
+    if (widget.task != null) {
+      title = widget.task!.title;
+      note = widget.task!.note;
+      isCompleted = widget.task!.isCompleted;
+      time = widget.task!.time;
+      date = widget.task!.date;
+      if (widget.task!.repeatDays.isNotEmpty) {
+        _initializeSelectedDays(widget.task!.repeatDays);
+      }
     }
   }
 
@@ -41,11 +44,75 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
+  List<String> _getSelectedDays() {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return [
+      for (int i = 0; i < 7; i++)
+        if (_selectedDays[i]) days[i]
+    ];
+  }
+
+  Future<void> _saveTask() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      final task = Task(
+        id: widget.task?.id,
+        title: title,
+        note: note,
+        isCompleted: isCompleted,
+        time: time,
+        date: date,
+        repeatDays: _getSelectedDays(),
+      );
+
+      try {
+        if (widget.task == null) {
+          await DatabaseHelper.instance.createTask(task);
+          debugPrint('Task created successfully');
+        } else {
+          await DatabaseHelper.instance.updateTask(task);
+          debugPrint('Task updated successfully');
+        }
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      } catch (e) {
+        debugPrint('Error saving task: $e');
+      }
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (pickedTime != null) {
+      setState(() {
+        time = pickedTime.format(context);
+      });
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        date = '${pickedDate.year}-${pickedDate.month}-${pickedDate.day}';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Allow the screen to resize when keyboard is open
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(widget.task == null ? 'Add New Task' : 'Update Task'),
       ),
@@ -54,7 +121,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
                 initialValue: title,
@@ -90,7 +156,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
               const Text('Repeat on:'),
               Wrap(
                 spacing: 5.0,
@@ -117,7 +182,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _saveTask, // Removed _isFormFilled check for testing
+                onPressed: _saveTask,
                 child: Text(widget.task == null ? 'Add Task' : 'Update Task'),
               ),
             ],
@@ -125,68 +190,5 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _saveTask() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
-      print(
-          "Title: $title, Note: $note, Time: $time, Date: $date, RepeatDays: ${_getSelectedDays()}");
-
-      final task = Task(
-        id: widget.task?.id,
-        title: title,
-        note: note,
-        isCompleted: isCompleted,
-        time: time,
-        date: date,
-        repeatDays: _getSelectedDays(),
-      );
-
-      if (widget.task == null) {
-        await DatabaseHelper.instance.createTask(task);
-      } else {
-        await DatabaseHelper.instance.updateTask(task);
-      }
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
-      }
-    }
-  }
-
-  List<String> _getSelectedDays() {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return [
-      for (int i = 0; i < 7; i++)
-        if (_selectedDays[i]) days[i]
-    ];
-  }
-
-  Future<void> _selectTime() async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (pickedTime != null) {
-      setState(() {
-        time = pickedTime.format(context);
-      });
-    }
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        date = '${pickedDate.year}-${pickedDate.month}-${pickedDate.day}';
-      });
-    }
   }
 }
