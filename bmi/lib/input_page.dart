@@ -5,7 +5,7 @@ class InputPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BMI CALCULATOR'),
+        title: const Text('BMI CALCULATOR'),
       ),
       body: Column(
         children: [
@@ -14,20 +14,12 @@ class InputPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.male,
-                      label: 'MALE',
-                    ),
+                    colors: const Color(0xFF1D1E33),
                   ),
                 ),
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.female,
-                      label: 'FEMALE',
-                    ),
+                    colors: const Color(0xFF1D1E33),
                   ),
                 ),
               ],
@@ -35,11 +27,7 @@ class InputPage extends StatelessWidget {
           ),
           Expanded(
             child: RepeatContainerCode(
-              color: Color(0xFF1D1E33),
-              child: RepeatTextAndIconWidget(
-                iconData: Icons.height,
-                label: 'HEIGHT',
-              ),
+              colors: const Color.fromARGB(255, 51, 60, 233),
             ),
           ),
           Expanded(
@@ -47,20 +35,12 @@ class InputPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.fitness_center,
-                      label: 'WEIGHT',
-                    ),
+                    colors: const Color(0xFF1D1E33),
                   ),
                 ),
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.accessibility,
-                      label: 'AGE',
-                    ),
+                    colors: const Color(0xFF1D1E33),
                   ),
                 ),
               ],
@@ -73,54 +53,15 @@ class InputPage extends StatelessWidget {
 }
 
 class RepeatContainerCode extends StatelessWidget {
-  final Color color;
-  final Widget child;
+  final Color colors;
 
-  const RepeatContainerCode({
-    Key? key,
-    required this.color,
-    required this.child,
-  }) : super(key: key);
+  const RepeatContainerCode({Key? key, required this.colors}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(8.0),
-      color: color,
-      child: Center(child: child),
-    );
-  }
-}
-
-class RepeatTextAndIconWidget extends StatelessWidget {
-  final IconData iconData;
-  final String label;
-
-  const RepeatTextAndIconWidget({
-    Key? key,
-    required this.iconData,
-    required this.label,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          iconData,
-          size: 80.0,
-          color: Colors.white,
-        ),
-        SizedBox(height: 15.0),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 18.0,
-            color: Colors.white,
-          ),
-        ),
-      ],
+      margin: const EdgeInsets.all(8.0),
+      color: colors,
     );
   }
 }
