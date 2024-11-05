@@ -5,6 +5,11 @@ import 'container.dart';
 const activeColor = Color(0xFF1D1E33);
 const deActiveColor = Color(0xFF111328);
 
+enum Gender {
+  male,
+  female,
+}
+
 class InputPage extends StatefulWidget {
   @override
   _InputPageState createState() => _InputPageState();
@@ -14,12 +19,12 @@ class _InputPageState extends State<InputPage> {
   Color maleColor = deActiveColor;
   Color femaleColor = deActiveColor;
 
-  void updateColor(int gender) {
+  void updateColor(Gender gendertype) {
     setState(() {
-      if (gender == 1) {
+      if (gendertype == Gender.male) {
         maleColor = activeColor;
         femaleColor = deActiveColor;
-      } else if (gender == 2) {
+      } else if (gendertype == Gender.female) {
         maleColor = deActiveColor;
         femaleColor = activeColor;
       }
@@ -34,13 +39,14 @@ class _InputPageState extends State<InputPage> {
       ),
       body: Column(
         children: [
+          // Gender selection row
           Expanded(
             child: Row(
               children: [
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      updateColor(1);
+                      updateColor(Gender.male);
                     },
                     child: RepeatContainerCode(
                       color: maleColor,
@@ -54,7 +60,7 @@ class _InputPageState extends State<InputPage> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      updateColor(2);
+                      updateColor(Gender.female);
                     },
                     child: RepeatContainerCode(
                       color: femaleColor,
@@ -68,34 +74,27 @@ class _InputPageState extends State<InputPage> {
               ],
             ),
           ),
+          // Empty widget for Height
           Expanded(
             child: RepeatContainerCode(
-              color: activeColor,
-              child: RepeatTextAndIconWidget(
-                iconData: Icons.height,
-                label: 'HEIGHT',
-              ),
+              color: Color(0xFF1D1E33),
+              child: Container(), // Empty container as placeholder
             ),
           ),
+          // Empty row for Weight and Age
           Expanded(
             child: Row(
               children: [
                 Expanded(
                   child: RepeatContainerCode(
-                    color: activeColor,
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.fitness_center,
-                      label: 'WEIGHT',
-                    ),
+                    color: Color(0xFF1D1E33),
+                    child: Container(), // Empty container as placeholder
                   ),
                 ),
                 Expanded(
                   child: RepeatContainerCode(
-                    color: activeColor,
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.accessibility,
-                      label: 'AGE',
-                    ),
+                    color: Color(0xFF1D1E33),
+                    child: Container(), // Empty container as placeholder
                   ),
                 ),
               ],
