@@ -110,7 +110,16 @@ class DatabaseHelper {
 
   Future<List<Task>> readRepeatedTasks() async {
     final db = await instance.database;
-    final result = await db.query('tasks', where: 'repeatDays IS NOT NULL');
+    final result = await db.query(
+      'tasks',
+      where: "repeatDays IS NOT NULL AND repeatDays != ''",
+    );
+
+    // Debugging print to verify repeatDays values
+    for (var row in result) {
+      print("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
+    }
+
     return result
         .map((json) => Task.fromJson(json))
         .toList(); // Convert to List
