@@ -1,9 +1,31 @@
 import 'package:flutter/material.dart';
 import 'IconTextFile.dart';
 import 'container.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class InputPage extends StatelessWidget {
+const activeColor = Color(0xFF1D1E33);
+const deActiveColor = Color(0xFF111328);
+
+class InputPage extends StatefulWidget {
+  @override
+  _InputPageState createState() => _InputPageState();
+}
+
+class _InputPageState extends State<InputPage> {
+  Color maleColor = deActiveColor;
+  Color femaleColor = deActiveColor;
+
+  void updateColor(int gender) {
+    setState(() {
+      if (gender == 1) {
+        maleColor = activeColor;
+        femaleColor = deActiveColor;
+      } else if (gender == 2) {
+        maleColor = deActiveColor;
+        femaleColor = activeColor;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,20 +38,30 @@ class InputPage extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.male,
-                      label: 'MALE',
+                  child: GestureDetector(
+                    onTap: () {
+                      updateColor(1);
+                    },
+                    child: RepeatContainerCode(
+                      color: maleColor,
+                      child: RepeatTextAndIconWidget(
+                        iconData: Icons.male,
+                        label: 'MALE',
+                      ),
                     ),
                   ),
                 ),
                 Expanded(
-                  child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: RepeatTextAndIconWidget(
-                      iconData: Icons.female,
-                      label: 'FEMALE',
+                  child: GestureDetector(
+                    onTap: () {
+                      updateColor(2);
+                    },
+                    child: RepeatContainerCode(
+                      color: femaleColor,
+                      child: RepeatTextAndIconWidget(
+                        iconData: Icons.female,
+                        label: 'FEMALE',
+                      ),
                     ),
                   ),
                 ),
@@ -38,7 +70,7 @@ class InputPage extends StatelessWidget {
           ),
           Expanded(
             child: RepeatContainerCode(
-              color: Color(0xFF1D1E33),
+              color: activeColor,
               child: RepeatTextAndIconWidget(
                 iconData: Icons.height,
                 label: 'HEIGHT',
@@ -50,7 +82,7 @@ class InputPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
+                    color: activeColor,
                     child: RepeatTextAndIconWidget(
                       iconData: Icons.fitness_center,
                       label: 'WEIGHT',
@@ -59,7 +91,7 @@ class InputPage extends StatelessWidget {
                 ),
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
+                    color: activeColor,
                     child: RepeatTextAndIconWidget(
                       iconData: Icons.accessibility,
                       label: 'AGE',
