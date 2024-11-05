@@ -42,4 +42,10 @@ To get a local copy of the project up and running, follow these simple steps.
 ![Capture2](https://github.com/user-attachments/assets/6f26e271-6fc4-4938-9540-436e854441b8)
 
 ## video 5 progress screenshot
+
+
+
+![7](https://github.com/user-attachments/assets/74999687-3430-4a1f-8d35-7b05939139f3)
+
+## video 6 progress screenshot
 ![2](https://github.com/user-attachments/assets/0dadcc6f-50aa-4288-8156-e710a969a6cb)
