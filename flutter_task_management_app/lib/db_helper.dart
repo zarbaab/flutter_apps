@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // for non-mobile platform support
 import 'package:path/path.dart';
 import 'task_model.dart';
@@ -46,7 +45,8 @@ class DatabaseHelper {
       note $textType,
       isCompleted $boolType,
       time $textType,
-      date $textType
+      date $textType,
+      repeatDays TEXT // New column for storing repeating days
     )
     ''');
   }
@@ -59,7 +59,9 @@ class DatabaseHelper {
   Future<List<Task>> readAllTasks() async {
     final db = await instance.database;
     final result = await db.query('tasks', orderBy: 'date ASC');
-    return result.map((json) => Task.fromJson(json)).toList();
+    return result
+        .map((json) => Task.fromJson(json))
+        .toList(); // Convert to List
   }
 
   Future<int> updateTask(Task task) async {
@@ -86,19 +88,25 @@ class DatabaseHelper {
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final result =
         await db.query('tasks', where: 'date = ?', whereArgs: [today]);
-    return result.map((json) => Task.fromJson(json)).toList();
+    return result
+        .map((json) => Task.fromJson(json))
+        .toList(); // Convert to List
   }
 
   Future<List<Task>> readCompletedTasks() async {
     final db = await instance.database;
     final result =
         await db.query('tasks', where: 'isCompleted = ?', whereArgs: [1]);
-    return result.map((json) => Task.fromJson(json)).toList();
+    return result
+        .map((json) => Task.fromJson(json))
+        .toList(); // Convert to List
   }
 
   Future<List<Task>> readRepeatedTasks() async {
     final db = await instance.database;
-    final result = await db.query('tasks', where: 'repeat = ?', whereArgs: [1]);
-    return result.map((json) => Task.fromJson(json)).toList();
+    final result = await db.query('tasks', where: 'repeatDays IS NOT NULL');
+    return result
+        .map((json) => Task.fromJson(json))
+        .toList(); // Convert to List
   }
 }

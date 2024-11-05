@@ -17,9 +17,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   bool isCompleted = false;
   String time = '';
   String date = '';
-
-  bool get _isFormFilled =>
-      title.isNotEmpty && note.isNotEmpty && time.isNotEmpty && date.isNotEmpty;
+  List<bool> _selectedDays = List.generate(7, (_) => false);
 
   @override
   void initState() {
@@ -29,19 +27,34 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     isCompleted = widget.task?.isCompleted ?? false;
     time = widget.task?.time ?? '';
     date = widget.task?.date ?? '';
+    if (widget.task != null && widget.task!.repeatDays.isNotEmpty) {
+      _initializeSelectedDays(widget.task!.repeatDays);
+    }
+  }
+
+  void _initializeSelectedDays(List<String> repeatDays) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (int i = 0; i < days.length; i++) {
+      if (repeatDays.contains(days[i])) {
+        _selectedDays[i] = true;
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset:
+          true, // Allow the screen to resize when keyboard is open
       appBar: AppBar(
         title: Text(widget.task == null ? 'Add New Task' : 'Update Task'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
                 initialValue: title,
@@ -78,8 +91,33 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              const Text('Repeat on:'),
+              Wrap(
+                spacing: 5.0,
+                children: List<Widget>.generate(7, (index) {
+                  const days = [
+                    'Sun',
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat'
+                  ];
+                  return ChoiceChip(
+                    label: Text(days[index]),
+                    selected: _selectedDays[index],
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedDays[index] = selected;
+                      });
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _isFormFilled ? _saveTask : null,
+                onPressed: _saveTask, // Removed _isFormFilled check for testing
                 child: Text(widget.task == null ? 'Add Task' : 'Update Task'),
               ),
             ],
@@ -92,6 +130,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _saveTask() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
+      print(
+          "Title: $title, Note: $note, Time: $time, Date: $date, RepeatDays: ${_getSelectedDays()}");
+
       final task = Task(
         id: widget.task?.id,
         title: title,
@@ -99,6 +141,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         isCompleted: isCompleted,
         time: time,
         date: date,
+        repeatDays: _getSelectedDays(),
       );
 
       if (widget.task == null) {
@@ -108,9 +151,17 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       }
 
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
     }
+  }
+
+  List<String> _getSelectedDays() {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return [
+      for (int i = 0; i < 7; i++)
+        if (_selectedDays[i]) days[i]
+    ];
   }
 
   Future<void> _selectTime() async {
