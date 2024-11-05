@@ -22,9 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
     });
     if (index == 1) {
-      _refreshCompletedTasks(); // Show completed tasks on "Completed" tab
+      _refreshCompletedTasks();
     } else if (index == 2) {
-      _refreshRepeatedTasks(); // Show repeated tasks on "Repeated" tab
+      _refreshRepeatedTasks();
     } else {
       _refreshTasks();
     }
@@ -148,6 +148,22 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(task.note),
           if (task.repeatDays.isNotEmpty)
             Text("Repeats on: ${task.repeatDays.join(', ')}"),
+          const SizedBox(height: 4),
+          if (task
+              .subtasks.isNotEmpty) // Show progress bar if there are subtasks
+            Column(
+              children: [
+                LinearProgressIndicator(
+                  value: task.completionPercentage / 100,
+                  minHeight: 5,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${task.completionPercentage.toStringAsFixed(0)}% completed",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
         ],
       ),
       trailing: IconButton(
@@ -212,6 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
       time: task.time,
       date: task.date,
       repeatDays: task.repeatDays,
+      subtasks: task.subtasks, // Keep existing subtasks
     );
     await DatabaseHelper.instance.updateTask(updatedTask);
     _refreshTasks();

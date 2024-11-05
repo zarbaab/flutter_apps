@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // Increment the database version
+      version: 3, // Incremented version for subtasks feature
       onCreate: _createDB,
       onUpgrade: _upgradeDB, // Add onUpgrade callback
     );
@@ -49,14 +49,36 @@ class DatabaseHelper {
       repeatDays TEXT
     )
     ''');
+
+    await db.execute('''
+    CREATE TABLE subtasks (
+      id $idType,
+      title $textType,
+      isCompleted $boolType,
+      parentTaskId INTEGER NOT NULL,
+      FOREIGN KEY (parentTaskId) REFERENCES tasks (id) ON DELETE CASCADE
+    )
+    ''');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute("ALTER TABLE tasks ADD COLUMN repeatDays TEXT");
     }
+    if (oldVersion < 3) {
+      await db.execute('''
+      CREATE TABLE IF NOT EXISTS subtasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        isCompleted BOOLEAN NOT NULL,
+        parentTaskId INTEGER NOT NULL,
+        FOREIGN KEY (parentTaskId) REFERENCES tasks (id) ON DELETE CASCADE
+      )
+      ''');
+    }
   }
 
+  // Task Methods
   Future<int> createTask(Task task) async {
     final db = await instance.database;
     return await db.insert('tasks', task.toJson());
@@ -65,9 +87,13 @@ class DatabaseHelper {
   Future<List<Task>> readAllTasks() async {
     final db = await instance.database;
     final result = await db.query('tasks', orderBy: 'date ASC');
-    return result
-        .map((json) => Task.fromJson(json))
-        .toList(); // Convert to List
+    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+
+    // Load subtasks for each task
+    for (var task in tasks) {
+      task.subtasks = await readSubtasks(task.id!);
+    }
+    return tasks;
   }
 
   Future<int> updateTask(Task task) async {
@@ -89,23 +115,68 @@ class DatabaseHelper {
     );
   }
 
+  // Subtask Methods
+  Future<int> createSubtask(int parentTaskId, String title) async {
+    final db = await instance.database;
+    return await db.insert('subtasks', {
+      'title': title,
+      'isCompleted': 0,
+      'parentTaskId': parentTaskId,
+    });
+  }
+
+  Future<List<Subtask>> readSubtasks(int parentTaskId) async {
+    final db = await instance.database;
+    final result = await db.query('subtasks',
+        where: 'parentTaskId = ?', whereArgs: [parentTaskId]);
+    return result.map((json) => Subtask.fromJson(json)).toList();
+  }
+
+  Future<int> updateSubtask(int id, bool isCompleted) async {
+    final db = await instance.database;
+    return await db.update(
+      'subtasks',
+      {'isCompleted': isCompleted ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteSubtask(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'subtasks',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Other Methods for Tasks
   Future<List<Task>> readTodayTasks() async {
     final db = await instance.database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final result =
         await db.query('tasks', where: 'date = ?', whereArgs: [today]);
-    return result
-        .map((json) => Task.fromJson(json))
-        .toList(); // Convert to List
+    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+
+    // Load subtasks for each task
+    for (var task in tasks) {
+      task.subtasks = await readSubtasks(task.id!);
+    }
+    return tasks;
   }
 
   Future<List<Task>> readCompletedTasks() async {
     final db = await instance.database;
     final result =
         await db.query('tasks', where: 'isCompleted = ?', whereArgs: [1]);
-    return result
-        .map((json) => Task.fromJson(json))
-        .toList(); // Convert to List
+    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+
+    // Load subtasks for each task
+    for (var task in tasks) {
+      task.subtasks = await readSubtasks(task.id!);
+    }
+    return tasks;
   }
 
   Future<List<Task>> readRepeatedTasks() async {
@@ -120,8 +191,12 @@ class DatabaseHelper {
       print("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
     }
 
-    return result
-        .map((json) => Task.fromJson(json))
-        .toList(); // Convert to List
+    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+
+    // Load subtasks for each task
+    for (var task in tasks) {
+      task.subtasks = await readSubtasks(task.id!);
+    }
+    return tasks;
   }
 }

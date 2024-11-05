@@ -17,8 +17,8 @@ class AddTaskScreenState extends State<AddTaskScreen> {
   bool isCompleted = false;
   String time = '';
   String date = '';
-  List<bool> _selectedDays =
-      List.generate(7, (_) => false); // Track selected days
+  List<bool> _selectedDays = List.generate(7, (_) => false);
+  List<Subtask> subtasks = []; // Store subtasks for this task
 
   @override
   void initState() {
@@ -29,6 +29,7 @@ class AddTaskScreenState extends State<AddTaskScreen> {
       isCompleted = widget.task!.isCompleted;
       time = widget.task!.time;
       date = widget.task!.date;
+      subtasks = widget.task!.subtasks; // Load existing subtasks
       if (widget.task!.repeatDays.isNotEmpty) {
         _initializeSelectedDays(widget.task!.repeatDays);
       }
@@ -64,14 +65,27 @@ class AddTaskScreenState extends State<AddTaskScreen> {
         time: time,
         date: date,
         repeatDays: _getSelectedDays(),
+        subtasks: subtasks, // Save subtasks with the task
       );
 
       try {
         if (widget.task == null) {
-          await DatabaseHelper.instance.createTask(task);
+          int taskId = await DatabaseHelper.instance.createTask(task);
+          for (var subtask in subtasks) {
+            await DatabaseHelper.instance.createSubtask(taskId, subtask.title);
+          }
           debugPrint('Task created successfully');
         } else {
           await DatabaseHelper.instance.updateTask(task);
+          for (var subtask in subtasks) {
+            if (subtask.id != null) {
+              await DatabaseHelper.instance
+                  .updateSubtask(subtask.id!, subtask.isCompleted);
+            } else {
+              await DatabaseHelper.instance
+                  .createSubtask(task.id!, subtask.title);
+            }
+          }
           debugPrint('Task updated successfully');
         }
         if (mounted) {
@@ -81,6 +95,36 @@ class AddTaskScreenState extends State<AddTaskScreen> {
         debugPrint('Error saving task: $e');
       }
     }
+  }
+
+  void _addSubtask() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String subtaskTitle = '';
+        return AlertDialog(
+          title: Text('Add Subtask'),
+          content: TextField(
+            onChanged: (value) => subtaskTitle = value,
+            decoration: InputDecoration(hintText: 'Enter subtask title'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                if (subtaskTitle.isNotEmpty) {
+                  setState(() {
+                    subtasks
+                        .add(Subtask(title: subtaskTitle, isCompleted: false));
+                  });
+                }
+                Navigator.of(context).pop();
+              },
+              child: Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _selectTime() async {
@@ -179,6 +223,26 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                     },
                   );
                 }),
+              ),
+              const SizedBox(height: 20),
+              // Subtasks Section
+              const Text('Subtasks:'),
+              ...subtasks.map((subtask) {
+                return ListTile(
+                  title: Text(subtask.title),
+                  trailing: Checkbox(
+                    value: subtask.isCompleted,
+                    onChanged: (value) {
+                      setState(() {
+                        subtask.isCompleted = value!;
+                      });
+                    },
+                  ),
+                );
+              }).toList(),
+              TextButton(
+                onPressed: _addSubtask,
+                child: const Text('Add Subtask'),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
