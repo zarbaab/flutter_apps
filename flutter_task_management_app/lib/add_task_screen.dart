@@ -17,7 +17,7 @@ class AddTaskScreenState extends State<AddTaskScreen> {
   bool isCompleted = false;
   String time = '';
   String date = '';
-  List<bool> _selectedDays = List.generate(7, (_) => false);
+  final List<bool> _selectedDays = List.generate(7, (_) => false);
   List<Subtask> subtasks = []; // Store subtasks for this task
 
   @override
@@ -65,7 +65,7 @@ class AddTaskScreenState extends State<AddTaskScreen> {
         time: time,
         date: date,
         repeatDays: _getSelectedDays(),
-        subtasks: subtasks, // Save subtasks with the task
+        subtasks: subtasks,
       );
 
       try {
@@ -103,10 +103,10 @@ class AddTaskScreenState extends State<AddTaskScreen> {
       builder: (context) {
         String subtaskTitle = '';
         return AlertDialog(
-          title: Text('Add Subtask'),
+          title: const Text('Add Subtask'),
           content: TextField(
             onChanged: (value) => subtaskTitle = value,
-            decoration: InputDecoration(hintText: 'Enter subtask title'),
+            decoration: const InputDecoration(hintText: 'Enter subtask title'),
           ),
           actions: [
             TextButton(
@@ -119,7 +119,7 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                 }
                 Navigator.of(context).pop();
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );
