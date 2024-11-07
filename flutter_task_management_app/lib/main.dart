@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'home_screen.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'dart:io' show Platform;
 
-void main() {
-  // Initialize database factory for non-mobile platforms (desktop/web)
-  if (!Platform.isAndroid && !Platform.isIOS) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
+// Create an instance of the FlutterLocalNotificationsPlugin
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
+
+  // Initialize local notifications for Android
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  // Initialize the plugin
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   runApp(const TaskManagementApp());
 }
@@ -17,12 +27,13 @@ class TaskManagementApp extends StatefulWidget {
   const TaskManagementApp({super.key});
 
   @override
-  _TaskManagementAppState createState() => _TaskManagementAppState();
+  TaskManagementAppState createState() => TaskManagementAppState();
 }
 
-class _TaskManagementAppState extends State<TaskManagementApp> {
+class TaskManagementAppState extends State<TaskManagementApp> {
   bool _isDarkTheme = false;
 
+  // Toggle between dark and light theme
   void _toggleTheme() {
     setState(() {
       _isDarkTheme = !_isDarkTheme;

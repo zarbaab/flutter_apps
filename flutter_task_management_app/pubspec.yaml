@@ -23,8 +23,10 @@ dependencies:
   ftoast: ^2.0.0
   path: ^1.8.0
   sqflite_common_ffi: ^2.0.0+1
-  flutter_local_notifications: ^18.0.0 
-  timezone: ^0.9.0
+  flutter_local_notifications: ^18.0.0 # Added for local notifications
+  timezone: ^0.9.0 # Added for timezone support
+  logger: ^1.1.0 # Add this line
+  permission_handler: ^10.2.0
 
 dev_dependencies:
   flutter_test:
