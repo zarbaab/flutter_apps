@@ -8,10 +8,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.toggleTheme});
 
   @override
-  HomeScreenState createState() => HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<Task> tasks = [];
   List<Task> completedTasks = [];
@@ -38,7 +38,6 @@ class HomeScreenState extends State<HomeScreen> {
 
   Future<void> _refreshTasks() async {
     tasks = await DatabaseHelper.instance.readAllTasks();
-
     setState(() {}); // Update UI with the new list of tasks
   }
 
@@ -230,7 +229,6 @@ class HomeScreenState extends State<HomeScreen> {
       date: task.date,
       repeatDays: task.repeatDays,
       subtasks: task.subtasks, // Keep existing subtasks
-      dueDate: task.dueDate, // Add this line to include dueDate
     );
     await DatabaseHelper.instance.updateTask(updatedTask);
     _refreshTasks();
@@ -263,15 +261,8 @@ class HomeScreenState extends State<HomeScreen> {
     );
 
     if (shouldDelete) {
-      // Cancel the notification for the task
-      await flutterLocalNotificationsPlugin.cancel(task.id!);
-
       await DatabaseHelper.instance.deleteTask(task.id!);
       _refreshTasks();
-
-      // Check if the widget is still mounted before using the context
-      if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Task deleted successfully")),
       );

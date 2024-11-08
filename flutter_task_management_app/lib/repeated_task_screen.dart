@@ -3,7 +3,7 @@ import 'db_helper.dart';
 import 'task_model.dart';
 
 class RepeatedTaskScreen extends StatelessWidget {
-  const RepeatedTaskScreen({super.key});
+  const RepeatedTaskScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

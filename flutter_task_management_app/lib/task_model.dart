@@ -1,5 +1,5 @@
 class Task {
-  int? id;
+  final int? id;
   final String title;
   final String note;
   bool isCompleted; // Changed from final to allow updates
@@ -7,7 +7,6 @@ class Task {
   final String date;
   final List<String> repeatDays;
   List<Subtask> subtasks; // New field for subtasks
-  DateTime dueDate; // Added field for due date
 
   Task({
     this.id,
@@ -19,7 +18,6 @@ class Task {
     this.repeatDays = const [],
     this.subtasks =
         const [], // Initialize with an empty list if no subtasks are provided
-    required this.dueDate, // Initialize dueDate
   });
 
   Map<String, dynamic> toJson() => {
@@ -30,21 +28,17 @@ class Task {
         'time': time,
         'date': date,
         'repeatDays': repeatDays.join(','),
-        'dueDate': dueDate.toIso8601String(), // Serialize dueDate
       };
 
   static Task fromJson(Map<String, dynamic> json) => Task(
         id: json['id'] as int?,
-        title:
-            json['title'] as String? ?? '', // Default to empty string if null
-        note: json['note'] as String? ?? '', // Default to empty string if null
+        title: json['title'] as String,
+        note: json['note'] as String,
         isCompleted: (json['isCompleted'] as int) == 1,
-        time: json['time'] as String? ?? '', // Default to empty string if null
-        date: json['date'] as String? ?? '', // Default to empty string if null
+        time: json['time'] as String,
+        date: json['date'] as String,
         repeatDays: (json['repeatDays'] as String?)?.split(',') ?? [],
         subtasks: [], // Initially set subtasks to an empty list; populate separately if needed
-        dueDate: DateTime.parse(json['dueDate'] as String? ??
-            DateTime.now().toIso8601String()), // Deserialize dueDate
       );
 
   // Calculate completion percentage based on completed subtasks

@@ -3,7 +3,7 @@ import 'db_helper.dart';
 import 'task_model.dart';
 
 class TodayTaskScreen extends StatelessWidget {
-  const TodayTaskScreen({super.key});
+  const TodayTaskScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

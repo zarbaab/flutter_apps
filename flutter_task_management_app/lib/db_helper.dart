@@ -3,14 +3,6 @@ import 'package:path/path.dart';
 import 'task_model.dart';
 import 'package:intl/intl.dart';
 import 'dart:io' show Platform;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-// Create an instance of the FlutterLocalNotificationsPlugin
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -86,88 +78,40 @@ class DatabaseHelper {
     }
   }
 
-  // Method to request exact alarm permission
-  Future<void> requestExactAlarmPermission() async {
-    if (await Permission.scheduleExactAlarm.isDenied) {
-      // Request the permission
-      await Permission.scheduleExactAlarm.request();
-    }
-  }
-
   // Task Methods
   Future<int> createTask(Task task) async {
     final db = await instance.database;
-    int id = await db.insert('tasks', task.toJson());
-    task.id = id; // Ensure the task ID is set
-
-    // Schedule a notification for the new task
-    await scheduleNotification(task);
-
-    return id;
-  }
-
-  Future<int> updateTask(Task task) async {
-    final db = await instance.database;
-    int result = await db.update(
-      'tasks',
-      task.toJson(),
-      where: 'id = ?',
-      whereArgs: [task.id],
-    );
-
-    // Reschedule the notification for the updated task
-    await scheduleNotification(task);
-
-    return result;
-  }
-
-  Future<int> deleteTask(int id) async {
-    final db = await instance.database;
-    // Cancel the notification for the deleted task
-    await flutterLocalNotificationsPlugin.cancel(id);
-    return await db.delete(
-      'tasks',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.insert('tasks', task.toJson());
   }
 
   Future<List<Task>> readAllTasks() async {
     final db = await instance.database;
     final result = await db.query('tasks', orderBy: 'date ASC');
-    return result.map((json) => Task.fromJson(json)).toList();
+    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+
+    // Load subtasks for each task
+    for (var task in tasks) {
+      task.subtasks = await readSubtasks(task.id!);
+    }
+    return tasks;
   }
 
-  // Function to schedule a notification
-  Future<void> scheduleNotification(Task task) async {
-    // Request exact alarm permission
-    await requestExactAlarmPermission();
-
-    final notificationDetails = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'task_channel',
-        'Task Notifications',
-        channelDescription: 'Notifications for task reminders',
-        importance: Importance.max,
-        priority: Priority.high,
-      ),
+  Future<int> updateTask(Task task) async {
+    final db = await instance.database;
+    return await db.update(
+      'tasks',
+      task.toJson(),
+      where: 'id = ?',
+      whereArgs: [task.id],
     );
+  }
 
-    // Calculate the time one minute before the due date
-    final DateTime localTime =
-        task.dueDate.subtract(const Duration(minutes: 1));
-    final tz.TZDateTime scheduledTime = tz.TZDateTime.from(localTime, tz.local);
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      task.id!,
-      'Task Reminder',
-      '${task.title} is due soon',
-      scheduledTime,
-      notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+  Future<int> deleteTask(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'tasks',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 
@@ -242,11 +186,9 @@ class DatabaseHelper {
       where: "repeatDays IS NOT NULL AND repeatDays != ''",
     );
 
-    final logger = Logger(); // Create an instance of Logger
-
-    // Use logger instead of print
+    // Debugging print to verify repeatDays values
     for (var row in result) {
-      logger.d("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
+      print("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
     }
 
     List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
