@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'add_task_screen.dart';
 import 'task_model.dart';
@@ -8,10 +9,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.toggleTheme});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   List<Task> tasks = [];
   List<Task> completedTasks = [];
@@ -32,8 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+      if (!isAllowed) {
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      }
+    });
     super.initState();
-    _refreshTasks();
   }
 
   Future<void> _refreshTasks() async {
@@ -227,6 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
       isCompleted: !task.isCompleted,
       time: task.time,
       date: task.date,
+      dueDate: task.dueDate,
       repeatDays: task.repeatDays,
       subtasks: task.subtasks, // Keep existing subtasks
     );
@@ -263,9 +269,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (shouldDelete) {
       await DatabaseHelper.instance.deleteTask(task.id!);
       _refreshTasks();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Task deleted successfully")),
-      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Task deleted successfully")),
+        );
+      }
     }
   }
 }

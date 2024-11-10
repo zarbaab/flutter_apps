@@ -5,6 +5,7 @@ class Task {
   bool isCompleted; // Changed from final to allow updates
   final String time;
   final String date;
+  DateTime dueDate; // Added field for due date
   final List<String> repeatDays;
   List<Subtask> subtasks; // New field for subtasks
 
@@ -15,6 +16,7 @@ class Task {
     this.isCompleted = false, // Default to false if not provided
     required this.time,
     required this.date,
+    required this.dueDate, // Initialize dueDate
     this.repeatDays = const [],
     this.subtasks =
         const [], // Initialize with an empty list if no subtasks are provided
@@ -27,6 +29,7 @@ class Task {
         'isCompleted': isCompleted ? 1 : 0,
         'time': time,
         'date': date,
+        'dueDate': dueDate.toIso8601String(), // Serialize dueDate
         'repeatDays': repeatDays.join(','),
       };
 
@@ -37,7 +40,9 @@ class Task {
         isCompleted: (json['isCompleted'] as int) == 1,
         time: json['time'] as String,
         date: json['date'] as String,
-        repeatDays: (json['repeatDays'] as String?)?.split(',') ?? [],
+        dueDate: DateTime.parse(json['dueDate'] as String? ??
+            DateTime.now()
+                .toIso8601String()), // Deserialize dueDate        repeatDays: (json['repeatDays'] as String?)?.split(',') ?? [],
         subtasks: [], // Initially set subtasks to an empty list; populate separately if needed
       );
 

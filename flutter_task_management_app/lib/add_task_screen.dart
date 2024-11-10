@@ -1,10 +1,12 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'db_helper.dart';
 import 'task_model.dart';
+import 'package:intl/intl.dart';
 
 class AddTaskScreen extends StatefulWidget {
   final Task? task;
-  const AddTaskScreen({Key? key, this.task}) : super(key: key);
+  const AddTaskScreen({super.key, this.task});
 
   @override
   AddTaskScreenState createState() => AddTaskScreenState();
@@ -17,6 +19,8 @@ class AddTaskScreenState extends State<AddTaskScreen> {
   bool isCompleted = false;
   String time = '';
   String date = '';
+  DateTime dueDate = DateTime.now(); // Added dueDate initialization
+
   final List<bool> _selectedDays = List.generate(7, (_) => false);
   List<Subtask> subtasks = []; // Store subtasks for this task
 
@@ -29,6 +33,9 @@ class AddTaskScreenState extends State<AddTaskScreen> {
       isCompleted = widget.task!.isCompleted;
       time = widget.task!.time;
       date = widget.task!.date;
+
+      dueDate; // Save dueDate
+
       subtasks = widget.task!.subtasks; // Load existing subtasks
       if (widget.task!.repeatDays.isNotEmpty) {
         _initializeSelectedDays(widget.task!.repeatDays);
@@ -64,6 +71,7 @@ class AddTaskScreenState extends State<AddTaskScreen> {
         isCompleted: isCompleted,
         time: time,
         date: date,
+        dueDate: dueDate,
         repeatDays: _getSelectedDays(),
         subtasks: subtasks,
       );
@@ -153,6 +161,31 @@ class AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
+  Future<void> _selectDueDate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: dueDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        dueDate = pickedDate;
+      });
+    }
+  }
+
+  triggerNotification() {
+    AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 10,
+        channelKey: 'basic_channel',
+        title: 'Task Added successfully',
+        body: 'Start working on it now and stay on track!',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,6 +233,20 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ],
               ),
+
+              Row(
+                children: [
+                  const Text('Due Date: '),
+                  Text(DateFormat('yyyy-MM-dd')
+                      .format(dueDate)), // Display selected due date
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    onPressed:
+                        _selectDueDate, // Corrected onPressed function to _selectDueDate
+                  ),
+                ],
+              ),
+
               const Text('Repeat on:'),
               Wrap(
                 spacing: 5.0,
@@ -224,7 +271,13 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                   );
                 }),
               ),
+              const Text('Remind Me'),
+              ElevatedButton(
+                onPressed: triggerNotification,
+                child: const Text('Tap to get notify about task'),
+              ),
               const SizedBox(height: 20),
+
               // Subtasks Section
               const Text('Subtasks:'),
               ...subtasks.map((subtask) {
@@ -239,7 +292,7 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                     },
                   ),
                 );
-              }).toList(),
+              }),
               TextButton(
                 onPressed: _addSubtask,
                 child: const Text('Add Subtask'),

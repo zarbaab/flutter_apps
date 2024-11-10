@@ -28,6 +28,8 @@ dependencies:
   logger: ^2.4.0 # Add this line
   permission_handler: ^11.3.1
   flutter_lints: ^5.0.0
+  awesome_notifications: ^0.10.0
+  logging: ^1.0.2
 
 dev_dependencies:
   flutter_test:

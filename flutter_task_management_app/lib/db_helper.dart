@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'task_model.dart';
 import 'package:intl/intl.dart';
 import 'dart:io' show Platform;
+import 'dart:developer' as developer;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -46,6 +47,7 @@ class DatabaseHelper {
       isCompleted $boolType,
       time $textType,
       date $textType,
+      duedate $textType,  
       repeatDays TEXT
     )
     ''');
@@ -66,15 +68,8 @@ class DatabaseHelper {
       await db.execute("ALTER TABLE tasks ADD COLUMN repeatDays TEXT");
     }
     if (oldVersion < 3) {
-      await db.execute('''
-      CREATE TABLE IF NOT EXISTS subtasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        isCompleted BOOLEAN NOT NULL,
-        parentTaskId INTEGER NOT NULL,
-        FOREIGN KEY (parentTaskId) REFERENCES tasks (id) ON DELETE CASCADE
-      )
-      ''');
+      await db.execute(
+          "ALTER TABLE tasks ADD COLUMN duedate TEXT"); // Add duedate column if upgrading from version < 3
     }
   }
 
@@ -188,7 +183,8 @@ class DatabaseHelper {
 
     // Debugging print to verify repeatDays values
     for (var row in result) {
-      print("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
+      developer
+          .log("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
     }
 
     List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
