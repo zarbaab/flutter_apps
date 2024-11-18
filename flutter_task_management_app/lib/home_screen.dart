@@ -1,280 +1,300 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'add_task_screen.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter_task_management_app/add_task_screen.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'task_model.dart';
 import 'db_helper.dart';
 
 class HomeScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const HomeScreen({super.key, required this.toggleTheme});
+  final void Function() onThemeChange; // Updated to void Function()
+
+  const HomeScreen({super.key, required this.onThemeChange});
 
   @override
   HomeScreenState createState() => HomeScreenState();
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  bool _isDarkMode = false;
   List<Task> tasks = [];
-  List<Task> completedTasks = [];
-  List<Task> repeatedTasks = [];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    if (index == 1) {
-      _refreshCompletedTasks();
-    } else if (index == 2) {
-      _refreshRepeatedTasks();
-    } else {
-      _refreshTasks();
-    }
-  }
+  Timer? _timer;
+  final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
 
   @override
   void initState() {
+    super.initState();
+    _loadTasks();
+    _startTaskReminderTimer();
     AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
       if (!isAllowed) {
         AwesomeNotifications().requestPermissionToSendNotifications();
       }
     });
-    super.initState();
   }
 
-  Future<void> _refreshTasks() async {
-    tasks = await DatabaseHelper.instance.readAllTasks();
-    setState(() {}); // Update UI with the new list of tasks
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  Future<void> _refreshCompletedTasks() async {
-    completedTasks = await DatabaseHelper.instance.readCompletedTasks();
-    setState(() {}); // Update UI with only completed tasks
+  void _startTaskReminderTimer() {
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      final now = DateTime.now();
+      for (final task in tasks) {
+        if (task.isRepeated && !task.isCompleted && task.dueDate != null) {
+          final remainingTime = _calculateTimeRemaining(task.dueDate);
+
+          if (remainingTime != null) {
+            if (!task.isCompleted && remainingTime.isNegative) {
+              AwesomeNotifications().createNotification(
+                content: NotificationContent(
+                  id: task.id ?? 0,
+                  channelKey: 'basic_channel',
+                  title: task.title,
+                  body: "Task time out",
+                ),
+              );
+            } else if (!task.isCompleted && remainingTime.inMinutes <= 30) {
+              AwesomeNotifications().createNotification(
+                content: NotificationContent(
+                  id: task.id ?? 0,
+                  channelKey: 'basic_channel',
+                  title: task.title,
+                  body: "Complete soon!",
+                ),
+              );
+            } else if (task.isRepeated && task.dueDate!.isBefore(now)) {
+              AwesomeNotifications().createNotification(
+                content: NotificationContent(
+                  id: task.id ?? 0,
+                  channelKey: 'basic_channel',
+                  title: task.title,
+                  body: "Task repeat!",
+                ),
+              );
+            }
+          }
+        }
+      }
+      setState(() {}); // Update UI with the latest task states
+    });
   }
 
-  Future<void> _refreshRepeatedTasks() async {
-    repeatedTasks = await DatabaseHelper.instance.readRepeatedTasks();
-    setState(() {}); // Update UI with only repeated tasks
+  Future<void> _loadTasks() async {
+    tasks = await _databaseHelper.readAllTasks();
+    for (var task in tasks) {
+      _updateTaskProgress(task);
+    }
+    setState(() {});
+  }
+
+  Duration? _calculateTimeRemaining(DateTime? dueDate) {
+    if (dueDate == null) return null;
+    return dueDate.difference(DateTime.now());
+  }
+
+  void _updateTaskProgress(Task task) {
+    if (task.subtasks.isNotEmpty) {
+      int completedSubtasks =
+          task.subtasks.where((subtask) => subtask.isCompleted).length;
+      task.completionPercentage =
+          (completedSubtasks / task.subtasks.length) * 100.0;
+    } else {
+      task.completionPercentage = task.isCompleted ? 100.0 : 0.0;
+    }
+  }
+
+  Future<void> exportTasksToPDF() async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Column(
+            children: tasks.map((task) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text("Title: ${task.title}",
+                      style: pw.TextStyle(fontSize: 18)),
+                  pw.Text("Description: ${task.description}"),
+                  pw.Text("Due Date: ${task.dueDate?.toString() ?? "N/A"}"),
+                  pw.Text("Completed: ${task.isCompleted ? "Yes" : "No"}"),
+                  pw.Text("Progress: ${(task.completionPercentage).toInt()}%"),
+                  pw.Divider(),
+                ],
+              );
+            }).toList(),
+          );
+        },
+      ),
+    );
+    await Printing.sharePdf(bytes: await pdf.save(), filename: 'tasks.pdf');
+  }
+
+  void _addTask(Task task) {
+    setState(() {
+      tasks.add(task);
+      _updateTaskProgress(task);
+    });
+    _databaseHelper.createTask(task);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${task.title} added')));
+  }
+
+  void _handleTaskCompletion(Task task) {
+    if (task.isCompleted) {
+      task.completionPercentage = 100.0;
+    } else {
+      _updateTaskProgress(task);
+    }
+
+    if (task.isRepeated && task.isCompleted) {
+      if (task.repeatFrequency == 'daily') {
+        task.dueDate = DateTime.now().add(const Duration(days: 1));
+      } else if (task.repeatFrequency == 'weekly' && task.repeatDays != null) {
+        DateTime nextDate = DateTime.now();
+        while (!task.repeatDays!.contains(_getDayName(nextDate))) {
+          nextDate = nextDate.add(const Duration(days: 1));
+        }
+        task.dueDate = nextDate;
+      }
+      task.isCompleted = false;
+      task.completionPercentage = 0.0;
+      task.lastCompleted = DateTime.now();
+    }
+
+    setState(() {
+      _databaseHelper.updateTask(task);
+    });
+  }
+
+  String _getDayName(DateTime date) {
+    return [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday'
+    ][date.weekday % 7];
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task Management'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.brightness_6),
-            onPressed: widget.toggleTheme,
-          ),
-        ],
-      ),
-      body: _selectedIndex == 1
-          ? _buildCompletedTaskList()
-          : _selectedIndex == 2
-              ? _buildRepeatedTaskList()
-              : _buildTaskList(),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.today),
-            label: 'Today',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.done),
-            label: 'Completed',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.repeat),
-            label: 'Repeated',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          bool? taskAdded = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const AddTaskScreen()),
-          );
-          if (taskAdded == true) {
-            _refreshTasks();
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  Widget _buildTaskList() {
-    if (tasks.isEmpty) {
-      return const Center(child: Text('No tasks available.'));
-    }
-    return ListView.builder(
-      itemCount: tasks.length,
-      itemBuilder: (context, index) {
-        final task = tasks[index];
-        return _buildTaskTile(task);
-      },
-    );
-  }
-
-  Widget _buildCompletedTaskList() {
-    if (completedTasks.isEmpty) {
-      return const Center(child: Text('No completed tasks.'));
-    }
-    return ListView.builder(
-      itemCount: completedTasks.length,
-      itemBuilder: (context, index) {
-        final task = completedTasks[index];
-        return _buildTaskTile(task);
-      },
-    );
-  }
-
-  Widget _buildRepeatedTaskList() {
-    if (repeatedTasks.isEmpty) {
-      return const Center(child: Text('No repeated tasks.'));
-    }
-    return ListView.builder(
-      itemCount: repeatedTasks.length,
-      itemBuilder: (context, index) {
-        final task = repeatedTasks[index];
-        return _buildTaskTile(task);
-      },
-    );
-  }
-
-  Widget _buildTaskTile(Task task) {
-    return ListTile(
-      title: Text(task.title),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(task.note),
-          if (task.repeatDays.isNotEmpty)
-            Text("Repeats on: ${task.repeatDays.join(', ')}"),
-          const SizedBox(height: 4),
-          if (task
-              .subtasks.isNotEmpty) // Show progress bar if there are subtasks
-            Column(
-              children: [
-                LinearProgressIndicator(
-                  value: task.completionPercentage / 100,
-                  minHeight: 5,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${task.completionPercentage.toStringAsFixed(0)}% completed",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Task Management'),
+          actions: [
+            Switch(
+              value: _isDarkMode,
+              onChanged: (value) {
+                setState(() {
+                  _isDarkMode = value;
+                  widget.onThemeChange();
+                });
+              },
+              activeColor: Colors.white,
             ),
-        ],
-      ),
-      trailing: IconButton(
-        icon: Icon(
-          task.isCompleted ? Icons.check_box : Icons.check_box_outline_blank,
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf),
+              onPressed: () {
+                exportTasksToPDF();
+              },
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: "Today's Tasks"),
+              Tab(text: "Completed Tasks"),
+              Tab(text: "Repeated Tasks"),
+            ],
+          ),
         ),
-        onPressed: () {
-          _toggleCompletion(task);
-        },
+        body: TabBarView(
+          children: [
+            _buildTaskListView((task) =>
+                task.dueDate?.day == DateTime.now().day && !task.isCompleted),
+            _buildTaskListView((task) => task.isCompleted),
+            _buildTaskListView((task) => task.isRepeated),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => AddTaskScreen(onSave: _addTask)),
+            );
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
-      onTap: () async {
-        bool? taskUpdated = await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => AddTaskScreen(task: task)),
-        );
-        if (taskUpdated == true) {
-          _refreshTasks();
-        }
-      },
-      onLongPress: () => _showTaskOptions(context, task),
     );
   }
 
-  void _showTaskOptions(BuildContext context, Task task) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Update Task'),
-              onTap: () async {
-                Navigator.of(context).pop();
-                bool? taskUpdated = await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => AddTaskScreen(task: task)),
-                );
-                if (taskUpdated == true) {
-                  _refreshTasks();
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete Task'),
-              onTap: () async {
-                Navigator.of(context).pop();
-                _deleteTask(task);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _toggleCompletion(Task task) async {
-    final updatedTask = Task(
-      id: task.id,
-      title: task.title,
-      note: task.note,
-      isCompleted: !task.isCompleted,
-      time: task.time,
-      date: task.date,
-      dueDate: task.dueDate,
-      repeatDays: task.repeatDays,
-      subtasks: task.subtasks, // Keep existing subtasks
-    );
-    await DatabaseHelper.instance.updateTask(updatedTask);
-    _refreshTasks();
-  }
-
-  Future<void> _deleteTask(Task task) async {
-    bool shouldDelete = await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Delete Task"),
-          content:
-              Text("Are you sure you want to delete the task '${task.title}'?"),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text("No"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text("Yes"),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldDelete) {
-      await DatabaseHelper.instance.deleteTask(task.id!);
-      _refreshTasks();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Task deleted successfully")),
-        );
-      }
-    }
+  Widget _buildTaskListView(bool Function(Task) filter) {
+    final filteredTasks = tasks.where(filter).toList();
+    return filteredTasks.isEmpty
+        ? const Center(child: Text('No tasks available'))
+        : ListView.builder(
+            itemCount: filteredTasks.length,
+            itemBuilder: (context, index) {
+              final task = filteredTasks[index];
+              final timeRemaining = _calculateTimeRemaining(task.dueDate);
+              return ListTile(
+                title: Text(task.title),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(task.description),
+                    if (timeRemaining != null)
+                      Text('Time Remaining: $timeRemaining',
+                          style: const TextStyle(color: Colors.red)),
+                    LinearProgressIndicator(
+                        value: task.completionPercentage / 100),
+                    Text(
+                        '${task.completionPercentage.toStringAsFixed(0)}% Complete'),
+                  ],
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: task.isCompleted,
+                      onChanged: (value) {
+                        setState(() {
+                          task.isCompleted = value ?? false;
+                          _handleTaskCompletion(task);
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        setState(() {
+                          tasks.remove(task);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('${task.title} removed')));
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => AddTaskScreen(onSave: _addTask)),
+                  );
+                },
+              );
+            },
+          );
   }
 }

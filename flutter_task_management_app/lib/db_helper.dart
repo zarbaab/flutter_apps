@@ -1,9 +1,7 @@
-import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // for non-mobile platform support
+import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'task_model.dart';
 import 'package:intl/intl.dart';
-import 'dart:io' show Platform;
-import 'dart:developer' as developer;
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -18,37 +16,38 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-    }
-
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
     return await openDatabase(
       path,
-      version: 3, // Incremented version for subtasks feature
+      version: 6, // Incremented for new fields and compatibility
       onCreate: _createDB,
-      onUpgrade: _upgradeDB, // Add onUpgrade callback
+      onUpgrade: _upgradeDB,
     );
   }
 
   Future _createDB(Database db, int version) async {
     const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
     const textType = 'TEXT NOT NULL';
-    const boolType = 'BOOLEAN NOT NULL';
+    const boolType = 'INTEGER NOT NULL';
+    const doubleType = 'REAL NOT NULL';
 
     await db.execute('''
     CREATE TABLE tasks ( 
       id $idType, 
       title $textType,
-      note $textType,
+      description $textType,
       isCompleted $boolType,
       time $textType,
+      endTime $textType,
       date $textType,
-      duedate $textType,  
-      repeatDays TEXT
+      dueDate $textType,
+      isRepeated $boolType,
+      repeatFrequency $textType,
+      repeatDays $textType,
+      completionPercentage $doubleType,
+      lastCompleted $textType
     )
     ''');
 
@@ -68,23 +67,33 @@ class DatabaseHelper {
       await db.execute("ALTER TABLE tasks ADD COLUMN repeatDays TEXT");
     }
     if (oldVersion < 3) {
-      await db.execute(
-          "ALTER TABLE tasks ADD COLUMN duedate TEXT"); // Add duedate column if upgrading from version < 3
+      await db.execute("ALTER TABLE tasks ADD COLUMN dueDate TEXT");
+    }
+    if (oldVersion < 4) {
+      await db.execute("ALTER TABLE tasks ADD COLUMN endTime TEXT");
+    }
+    if (oldVersion < 5) {
+      await db
+          .execute("ALTER TABLE tasks ADD COLUMN completionPercentage REAL");
+    }
+    if (oldVersion < 6) {
+      await db.execute("ALTER TABLE tasks ADD COLUMN lastCompleted TEXT");
     }
   }
 
-  // Task Methods
+  // Task CRUD Operations
+
   Future<int> createTask(Task task) async {
     final db = await instance.database;
-    return await db.insert('tasks', task.toJson());
+    return await db.insert('tasks', task.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Task>> readAllTasks() async {
     final db = await instance.database;
     final result = await db.query('tasks', orderBy: 'date ASC');
-    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+    List<Task> tasks = result.map((json) => Task.fromMap(json)).toList();
 
-    // Load subtasks for each task
     for (var task in tasks) {
       task.subtasks = await readSubtasks(task.id!);
     }
@@ -95,7 +104,7 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.update(
       'tasks',
-      task.toJson(),
+      task.toMap(),
       where: 'id = ?',
       whereArgs: [task.id],
     );
@@ -110,7 +119,8 @@ class DatabaseHelper {
     );
   }
 
-  // Subtask Methods
+  // Subtask CRUD Operations
+
   Future<int> createSubtask(int parentTaskId, String title) async {
     final db = await instance.database;
     return await db.insert('subtasks', {
@@ -146,15 +156,15 @@ class DatabaseHelper {
     );
   }
 
-  // Other Methods for Tasks
+  // Helper methods for retrieving specific types of tasks
+
   Future<List<Task>> readTodayTasks() async {
     final db = await instance.database;
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final result =
         await db.query('tasks', where: 'date = ?', whereArgs: [today]);
-    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+    List<Task> tasks = result.map((json) => Task.fromMap(json)).toList();
 
-    // Load subtasks for each task
     for (var task in tasks) {
       task.subtasks = await readSubtasks(task.id!);
     }
@@ -165,9 +175,8 @@ class DatabaseHelper {
     final db = await instance.database;
     final result =
         await db.query('tasks', where: 'isCompleted = ?', whereArgs: [1]);
-    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
+    List<Task> tasks = result.map((json) => Task.fromMap(json)).toList();
 
-    // Load subtasks for each task
     for (var task in tasks) {
       task.subtasks = await readSubtasks(task.id!);
     }
@@ -176,23 +185,17 @@ class DatabaseHelper {
 
   Future<List<Task>> readRepeatedTasks() async {
     final db = await instance.database;
-    final result = await db.query(
-      'tasks',
-      where: "repeatDays IS NOT NULL AND repeatDays != ''",
-    );
+    final result = await db.query('tasks', where: "isRepeated = 1");
+    List<Task> tasks = result.map((json) => Task.fromMap(json)).toList();
 
-    // Debugging print to verify repeatDays values
-    for (var row in result) {
-      developer
-          .log("Task: ${row['title']} - Repeat Days: ${row['repeatDays']}");
-    }
-
-    List<Task> tasks = result.map((json) => Task.fromJson(json)).toList();
-
-    // Load subtasks for each task
     for (var task in tasks) {
       task.subtasks = await readSubtasks(task.id!);
     }
     return tasks;
+  }
+
+  Future<void> close() async {
+    final db = await instance.database;
+    db.close();
   }
 }

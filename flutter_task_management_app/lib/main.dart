@@ -5,30 +5,43 @@ import 'welcomepage.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:logging/logging.dart';
 
-final Logger _logger = Logger('MyAppLogger'); // Logger instance
+final Logger _logger = Logger('MyAppLogger');
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Awesome Notifications with notification channel
+  // Set up logging level
+  _logger.level = Level.INFO;
+  _logger.onRecord.listen((record) {
+    _logger.info('${record.level.name}: ${record.time}: ${record.message}');
+  });
+
+  // Initialize Awesome Notifications
   AwesomeNotifications().initialize(
-    'resource://drawable/res_app_icon', // Large icon for the notification
+    'resource://drawable/res_app_icon',
     [
       NotificationChannel(
-        channelKey: 'basic_channel', // Unique channel key
+        channelKey: 'basic_channel',
         channelName: 'Basic notification',
         channelDescription: 'Notification channel for basic test',
-        defaultColor: Color(0xFF9D50DD), // Channel color
-        ledColor: Colors.white, // LED color for notifications
+        defaultColor: Color(0xFF9D50DD),
+        ledColor: Colors.white,
       ),
     ],
-    debug:
-        true, // Debugging enabled to check if channel is registered correctly
+    debug: true,
   );
-  _logger.info(
-      "Notifications initialized"); // Log that notifications were initialized
+  _logger.info("Notifications initialized");
 
-  // Initialize database for non-mobile platforms (desktop/web)
+  // Request notification permissions on mobile
+  if (Platform.isAndroid || Platform.isIOS) {
+    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+      if (!isAllowed) {
+        AwesomeNotifications().requestPermissionToSendNotifications();
+      }
+    });
+  }
+
+  // Initialize sqflite for desktop platforms
   if (!Platform.isAndroid && !Platform.isIOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -47,16 +60,16 @@ class TaskManagementApp extends StatefulWidget {
 class TaskManagementAppState extends State<TaskManagementApp> {
   bool _isDarkTheme = false;
 
-  // Trigger a notification as soon as the app starts
   @override
   void initState() {
     super.initState();
+    // Trigger welcome notification
     AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: 1,
-        channelKey: 'basic_channel', // The notification channel key
-        title: 'App Initialized',
-        body: 'Your app is now running!',
+        channelKey: 'basic_channel',
+        title: 'Welcome to TODO App!',
+        body: 'Manage your tasks, simplify your life!',
       ),
     );
   }

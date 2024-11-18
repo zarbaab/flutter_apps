@@ -1,12 +1,14 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'db_helper.dart';
 import 'task_model.dart';
 import 'package:intl/intl.dart';
 
 class AddTaskScreen extends StatefulWidget {
   final Task? task;
-  const AddTaskScreen({super.key, this.task});
+  final Function(Task) onSave;
+
+  const AddTaskScreen({super.key, this.task, required this.onSave});
 
   @override
   AddTaskScreenState createState() => AddTaskScreenState();
@@ -14,64 +16,46 @@ class AddTaskScreen extends StatefulWidget {
 
 class AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  String title = '';
-  String note = '';
-  bool isCompleted = false;
-  String time = '';
-  String date = '';
-  DateTime dueDate = DateTime.now(); // Added dueDate initialization
-
-  final List<bool> _selectedDays = List.generate(7, (_) => false);
-  List<Subtask> subtasks = []; // Store subtasks for this task
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  DateTime? _dueDate;
+  TimeOfDay? _dueTime;
+  List<String> _repeatDays = [];
+  List<Subtask> subtasks = [];
+  bool _isRepeated = false;
+  final bool _isCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.task != null) {
-      title = widget.task!.title;
-      note = widget.task!.note;
-      isCompleted = widget.task!.isCompleted;
-      time = widget.task!.time;
-      date = widget.task!.date;
-
-      dueDate; // Save dueDate
-
-      subtasks = widget.task!.subtasks; // Load existing subtasks
-      if (widget.task!.repeatDays.isNotEmpty) {
-        _initializeSelectedDays(widget.task!.repeatDays);
-      }
-    }
-  }
-
-  void _initializeSelectedDays(List<String> repeatDays) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    for (int i = 0; i < days.length; i++) {
-      if (repeatDays.contains(days[i])) {
-        _selectedDays[i] = true;
-      }
-    }
+    _titleController = TextEditingController(text: widget.task?.title ?? '');
+    _descriptionController =
+        TextEditingController(text: widget.task?.description ?? '');
+    _dueDate = widget.task?.dueDate;
+    _repeatDays = widget.task?.repeatDays ?? [];
+    subtasks = widget.task?.subtasks ?? [];
   }
 
   List<String> _getSelectedDays() {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return [
       for (int i = 0; i < 7; i++)
-        if (_selectedDays[i]) days[i]
+        if (_repeatDays.contains(days[i])) days[i]
     ];
   }
 
   Future<void> _saveTask() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
       final task = Task(
         id: widget.task?.id,
-        title: title,
-        note: note,
-        isCompleted: isCompleted,
-        time: time,
-        date: date,
-        dueDate: dueDate,
+        title: _titleController.text,
+        description: _descriptionController.text,
+        isCompleted: _isCompleted,
+        time: _dueTime != null ? _dueTime!.format(context) : '',
+        date:
+            _dueDate != null ? DateFormat('yyyy-MM-dd').format(_dueDate!) : '',
+        dueDate: _combineDateAndTime(_dueDate, _dueTime),
         repeatDays: _getSelectedDays(),
         subtasks: subtasks,
       );
@@ -82,7 +66,6 @@ class AddTaskScreenState extends State<AddTaskScreen> {
           for (var subtask in subtasks) {
             await DatabaseHelper.instance.createSubtask(taskId, subtask.title);
           }
-          debugPrint('Task created successfully');
         } else {
           await DatabaseHelper.instance.updateTask(task);
           for (var subtask in subtasks) {
@@ -94,88 +77,15 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                   .createSubtask(task.id!, subtask.title);
             }
           }
-          debugPrint('Task updated successfully');
         }
-        if (mounted) {
-          Navigator.of(context).pop(true);
-        }
+        widget.onSave(task);
       } catch (e) {
         debugPrint('Error saving task: $e');
       }
     }
   }
 
-  void _addSubtask() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String subtaskTitle = '';
-        return AlertDialog(
-          title: const Text('Add Subtask'),
-          content: TextField(
-            onChanged: (value) => subtaskTitle = value,
-            decoration: const InputDecoration(hintText: 'Enter subtask title'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                if (subtaskTitle.isNotEmpty) {
-                  setState(() {
-                    subtasks
-                        .add(Subtask(title: subtaskTitle, isCompleted: false));
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _selectTime() async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (pickedTime != null) {
-      setState(() {
-        time = pickedTime.format(context);
-      });
-    }
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        date = '${pickedDate.year}-${pickedDate.month}-${pickedDate.day}';
-      });
-    }
-  }
-
-  Future<void> _selectDueDate() async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: dueDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        dueDate = pickedDate;
-      });
-    }
-  }
-
-  triggerNotification() {
+  void triggerNotification() {
     AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: 10,
@@ -186,10 +96,14 @@ class AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
+  DateTime? _combineDateAndTime(DateTime? date, TimeOfDay? time) {
+    if (date == null || time == null) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(widget.task == null ? 'Add New Task' : 'Update Task'),
       ),
@@ -200,54 +114,71 @@ class AddTaskScreenState extends State<AddTaskScreen> {
           child: Column(
             children: [
               TextFormField(
-                initialValue: title,
+                controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Title'),
-                onChanged: (value) => setState(() => title = value),
                 validator: (value) =>
                     value!.isEmpty ? 'Title cannot be empty' : null,
               ),
               TextFormField(
-                initialValue: note,
-                decoration: const InputDecoration(labelText: 'Note'),
-                onChanged: (value) => setState(() => note = value),
+                controller: _descriptionController,
+                decoration: const InputDecoration(labelText: 'Description'),
                 validator: (value) =>
-                    value!.isEmpty ? 'Note cannot be empty' : null,
+                    value!.isEmpty ? 'Description cannot be empty' : null,
               ),
               Row(
                 children: [
-                  const Text('Time: '),
-                  Text(time.isNotEmpty ? time : 'Select'),
+                  const Text('Due Date:'),
+                  Text(_dueDate != null
+                      ? DateFormat('yyyy-MM-dd').format(_dueDate!)
+                      : 'Not Set'),
                   IconButton(
-                    icon: const Icon(Icons.access_time),
-                    onPressed: _selectTime,
+                    icon: Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      final selectedDate = await showDatePicker(
+                        context: context,
+                        initialDate: _dueDate ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      setState(() {
+                        _dueDate = selectedDate;
+                      });
+                    },
                   ),
                 ],
               ),
               Row(
                 children: [
-                  const Text('Date: '),
-                  Text(date.isNotEmpty ? date : 'Select'),
+                  const Text('Due Time:'),
+                  Text(
+                      _dueTime != null ? _dueTime!.format(context) : 'Not Set'),
                   IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: _selectDate,
+                    icon: Icon(Icons.access_time),
+                    onPressed: () async {
+                      final selectedTime = await showTimePicker(
+                        context: context,
+                        initialTime: _dueTime ?? TimeOfDay.now(),
+                      );
+                      setState(() {
+                        _dueTime = selectedTime;
+                      });
+                    },
                   ),
                 ],
               ),
-
               Row(
                 children: [
-                  const Text('Due Date: '),
-                  Text(DateFormat('yyyy-MM-dd')
-                      .format(dueDate)), // Display selected due date
-                  IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed:
-                        _selectDueDate, // Corrected onPressed function to _selectDueDate
+                  Checkbox(
+                    value: _isRepeated,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _isRepeated = value ?? false;
+                      });
+                    },
                   ),
+                  const Text('Repeated Task'),
                 ],
               ),
-
-              const Text('Repeat on:'),
               Wrap(
                 spacing: 5.0,
                 children: List<Widget>.generate(7, (index) {
@@ -262,44 +193,65 @@ class AddTaskScreenState extends State<AddTaskScreen> {
                   ];
                   return ChoiceChip(
                     label: Text(days[index]),
-                    selected: _selectedDays[index],
+                    selected: _repeatDays.contains(days[index]),
                     onSelected: (selected) {
                       setState(() {
-                        _selectedDays[index] = selected;
+                        selected
+                            ? _repeatDays.add(days[index])
+                            : _repeatDays.remove(days[index]);
                       });
                     },
                   );
                 }),
               ),
-              const Text('Remind Me'),
-              ElevatedButton(
-                onPressed: triggerNotification,
-                child: const Text('Tap to get notify about task'),
-              ),
-              const SizedBox(height: 20),
-
-              // Subtasks Section
               const Text('Subtasks:'),
-              ...subtasks.map((subtask) {
-                return ListTile(
-                  title: Text(subtask.title),
-                  trailing: Checkbox(
-                    value: subtask.isCompleted,
-                    onChanged: (value) {
-                      setState(() {
-                        subtask.isCompleted = value!;
-                      });
-                    },
-                  ),
-                );
-              }),
+              ...subtasks.map((subtask) => ListTile(
+                    title: Text(subtask.title),
+                    trailing: Checkbox(
+                      value: subtask.isCompleted,
+                      onChanged: (value) {
+                        setState(() {
+                          subtask.isCompleted = value!;
+                        });
+                      },
+                    ),
+                  )),
               TextButton(
-                onPressed: _addSubtask,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      String subtaskTitle = '';
+                      return AlertDialog(
+                        title: const Text('Add Subtask'),
+                        content: TextField(
+                          onChanged: (value) => subtaskTitle = value,
+                          decoration: const InputDecoration(
+                              hintText: 'Enter subtask title'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                subtasks.add(Subtask(
+                                    title: subtaskTitle, isCompleted: false));
+                              });
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Add'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
                 child: const Text('Add Subtask'),
               ),
-              const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _saveTask,
+                onPressed: () {
+                  triggerNotification();
+                  _saveTask();
+                },
                 child: Text(widget.task == null ? 'Add Task' : 'Update Task'),
               ),
             ],

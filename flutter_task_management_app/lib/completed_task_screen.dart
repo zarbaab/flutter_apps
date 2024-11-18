@@ -20,7 +20,7 @@ class CompletedTaskScreen extends StatelessWidget {
           children: snapshot.data!
               .map((task) => ListTile(
                     title: Text(task.title),
-                    subtitle: Text(task.note),
+                    subtitle: Text(task.description),
                   ))
               .toList(),
         );
