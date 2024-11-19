@@ -3,19 +3,27 @@ import 'package:flutter/material.dart';
 class RepeatContainerCode extends StatelessWidget {
   final Color color;
   final Widget child;
+  final VoidCallback onPressed;
 
   const RepeatContainerCode({
-    Key? key,
+    super.key,
     required this.color,
     required this.child,
-  }) : super(key: key);
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(8.0),
-      color: color,
-      child: Center(child: child),
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        margin: const EdgeInsets.all(15.0),
+        child: Center(child: child),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10.0), // Optional rounding
+        ),
+      ),
     );
   }
 }

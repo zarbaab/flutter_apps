@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'IconTextFile.dart';
+import 'IconTextFile.dart'; // Ensure this file contains the RepeatTextAndIconWidget
 import 'container.dart';
 
 const activeColor = Color(0xFF1D1E33);
@@ -11,6 +11,8 @@ enum Gender {
 }
 
 class InputPage extends StatefulWidget {
+  const InputPage({super.key});
+
   @override
   _InputPageState createState() => _InputPageState();
 }
@@ -22,7 +24,8 @@ class _InputPageState extends State<InputPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BMI CALCULATOR'),
+        title: const Text('BMI CALCULATOR'),
+        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -30,62 +33,84 @@ class _InputPageState extends State<InputPage> {
           Expanded(
             child: Row(
               children: [
+                // Male container
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      selectGender = Gender.male;
+                  child: RepeatContainerCode(
+                    onPressed: () {
+                      setState(() {
+                        selectGender = Gender.male;
+                      });
                     },
-                    child: RepeatContainerCode(
-                      color: selectGender == Gender.male
-                          ? activeColor
-                          : deActiveColor,
-                      child: RepeatTextAndIconWidget(
-                        iconData: Icons.male,
-                        label: 'MALE',
-                      ),
+                    color: selectGender == Gender.male
+                        ? activeColor
+                        : deActiveColor,
+                    child: const RepeatTextAndIconWidget(
+                      iconData: Icons.male,
+                      label: 'MALE',
                     ),
                   ),
                 ),
+                // Female container
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      selectGender = Gender.female;
+                  child: RepeatContainerCode(
+                    onPressed: () {
+                      setState(() {
+                        selectGender = Gender.female;
+                      });
                     },
-                    child: RepeatContainerCode(
-                      color: selectGender == Gender.female
-                          ? activeColor
-                          : deActiveColor,
-                      child: RepeatTextAndIconWidget(
-                        iconData: Icons.female,
-                        label: 'FEMALE',
-                      ),
+                    color: selectGender == Gender.female
+                        ? activeColor
+                        : deActiveColor,
+                    child: const RepeatTextAndIconWidget(
+                      iconData: Icons.female,
+                      label: 'FEMALE',
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          // Empty widget for Height
+          // Height placeholder
           Expanded(
             child: RepeatContainerCode(
-              color: Color(0xFF1D1E33),
-              child: Container(), // Empty container as placeholder
+              color: const Color(0xFF1D1E33),
+              onPressed: () {}, // Placeholder callback
+              child: const Center(
+                child: Text(
+                  'HEIGHT',
+                  style: TextStyle(fontSize: 18.0, color: Colors.white),
+                ),
+              ),
             ),
           ),
-          // Empty row for Weight and Age
+          // Weight and Age placeholder row
           Expanded(
             child: Row(
               children: [
+                // Weight container
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: Container(), // Empty container as placeholder
+                    color: const Color(0xFF1D1E33),
+                    onPressed: () {}, // Placeholder callback
+                    child: const Center(
+                      child: Text(
+                        'WEIGHT',
+                        style: TextStyle(fontSize: 18.0, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
+                // Age container
                 Expanded(
                   child: RepeatContainerCode(
-                    color: Color(0xFF1D1E33),
-                    child: Container(), // Empty container as placeholder
+                    color: const Color(0xFF1D1E33),
+                    onPressed: () {}, // Placeholder callback
+                    child: const Center(
+                      child: Text(
+                        'AGE',
+                        style: TextStyle(fontSize: 18.0, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
               ],
