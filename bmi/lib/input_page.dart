@@ -4,6 +4,8 @@ import 'container.dart';
 import 'constant.dart'; // Import the constants file
 
 int height = 170; // Default height
+int weight = 60; // Default weight
+int age = 25; // Default age
 
 enum Gender {
   male,
@@ -140,11 +142,23 @@ class _InputPageState extends State<InputPage> {
                   child: RepeatContainerCode(
                     color: const Color(0xFF1D1E33),
                     onPressed: () {}, // Placeholder callback
-                    child: Center(
-                      child: Text(
-                        'WEIGHT',
-                        style: kLabelStyle, // Applied kLabelStyle here
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'WEIGHT',
+                          style: kLabelStyle, // Label style
+                        ),
+                        const SizedBox(height: 10.0), // Space below the label
+                        Text(
+                          weight.toString(), // Display weight value
+                          style: const TextStyle(
+                            fontSize: 50.0, // Large font size for number
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -153,11 +167,23 @@ class _InputPageState extends State<InputPage> {
                   child: RepeatContainerCode(
                     color: const Color(0xFF1D1E33),
                     onPressed: () {}, // Placeholder callback
-                    child: Center(
-                      child: Text(
-                        'AGE',
-                        style: kLabelStyle, // Applied kLabelStyle here
-                      ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'AGE',
+                          style: kLabelStyle, // Label style
+                        ),
+                        const SizedBox(height: 10.0), // Space below the label
+                        Text(
+                          age.toString(), // Display age value
+                          style: const TextStyle(
+                            fontSize: 50.0, // Large font size for number
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
