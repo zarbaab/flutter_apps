@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'IconTextFile.dart'; // Ensure this file contains the RepeatTextAndIconWidget
 import 'container.dart';
+import 'constant.dart'; // Import the constants file
 
-const activeColor = Color(0xFF1D1E33);
-const deActiveColor = Color(0xFF111328);
+int height = 170; // Default height
 
 enum Gender {
   male,
@@ -75,14 +75,62 @@ class _InputPageState extends State<InputPage> {
             child: RepeatContainerCode(
               color: const Color(0xFF1D1E33),
               onPressed: () {}, // Placeholder callback
-              child: const Center(
-                child: Text(
-                  'HEIGHT',
-                  style: TextStyle(fontSize: 18.0, color: Colors.white),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'HEIGHT',
+                    style: kLabelStyle, // Applied kLabelStyle here
+                  ),
+                  const SizedBox(height: 15.0), // Space below the label
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        height.toString(), // Display current height
+                        style: const TextStyle(
+                          fontSize: 50.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(
+                          width: 5.0), // Space between number and "cm"
+                      const Text(
+                        'cm',
+                        style: kLabelStyle, // Applied kLabelStyle here
+                      ),
+                    ],
+                  ),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: const Color(0xFF8D8E98),
+                      thumbColor: const Color(0xFFEB1555),
+                      overlayColor: const Color(0x29EB1555), // 16% opacity
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 15.0),
+                      overlayShape:
+                          const RoundSliderOverlayShape(overlayRadius: 30.0),
+                    ),
+                    child: Slider(
+                      value: height.toDouble(),
+                      min: 120.0,
+                      max: 220.0,
+                      onChanged: (double newValue) {
+                        setState(() {
+                          height = newValue.round();
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+
           // Weight and Age placeholder row
           Expanded(
             child: Row(
@@ -92,10 +140,10 @@ class _InputPageState extends State<InputPage> {
                   child: RepeatContainerCode(
                     color: const Color(0xFF1D1E33),
                     onPressed: () {}, // Placeholder callback
-                    child: const Center(
+                    child: Center(
                       child: Text(
                         'WEIGHT',
-                        style: TextStyle(fontSize: 18.0, color: Colors.white),
+                        style: kLabelStyle, // Applied kLabelStyle here
                       ),
                     ),
                   ),
@@ -105,10 +153,10 @@ class _InputPageState extends State<InputPage> {
                   child: RepeatContainerCode(
                     color: const Color(0xFF1D1E33),
                     onPressed: () {}, // Placeholder callback
-                    child: const Center(
+                    child: Center(
                       child: Text(
                         'AGE',
-                        style: TextStyle(fontSize: 18.0, color: Colors.white),
+                        style: kLabelStyle, // Applied kLabelStyle here
                       ),
                     ),
                   ),
